@@ -2,7 +2,10 @@
 # This script sets up the environment for the Ziggurat test suite.
 #
 # The private network setup is explained here:
-#      https://developer.algorand.org/docs/clis/goal/network/create/
+# [1] https://developer.algorand.org/docs/clis/goal/network/create/
+
+# Telemetry config settings are explained here:
+# [2] https://developer.algorand.org/docs/run-a-node/reference/telemetry-config/
 
 set -e
 
@@ -24,7 +27,7 @@ ZIGGURAT_ALGORAND_PN_DIR="$ZIGGURAT_ALGORAND_DIR/private_network"
 setup_config_file() {
     echo "--- Setting up configuration file"
     echo "Creating $ZIGGURAT_ALGORAND_SETUP_CFG_FILE with contents:"
-    mkdir $ZIGGURAT_ALGORAND_SETUP_DIR
+    mkdir -p $ZIGGURAT_ALGORAND_SETUP_DIR
     echo
     echo "# Algorand installation path" > $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
     echo "path = \"$ALGORAND_BIN_PATH\"" >> $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
@@ -38,8 +41,12 @@ setup_config_file() {
 
 setup_private_network() {
     echo "--- Setting up private network files at the location $ZIGGURAT_ALGORAND_PN_DIR"
-    $GOAL_CMD network create -r $ZIGGURAT_ALGORAND_PN_DIR -n private -t tools/ziggurat_network_template.json
+    $GOAL_CMD network create -r $ZIGGURAT_ALGORAND_PN_DIR -n private -t tools/ziggurat_network_template.json # see [1]
     echo
+
+    # Copy telemetry config file manually to ensure nodes don't look for the global config file at ~/.algorand/
+    cp tools/logging.config $ZIGGURAT_ALGORAND_PN_DIR/Node0/  # see [2]
+    cp tools/logging.config $ZIGGURAT_ALGORAND_PN_DIR/Node1/  # see [2]
 }
 
 # Verify the algod binary path using the version option

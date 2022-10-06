@@ -3,17 +3,17 @@
         "NetworkName": "ZigguratNet",
         "Wallets": [
             {
-                "Name": "Wallet1",
+                "Name": "Wallet0",
                 "Stake": 80,
                 "Online": true
             },
             {
-                "Name": "Wallet2",
+                "Name": "Wallet1",
                 "Stake": 5,
                 "Online": true
             },
             {
-                "Name": "Wallet3",
+                "Name": "Wallet2",
                 "Stake": 15,
                 "Online": false
             }
@@ -21,24 +21,24 @@
     },
     "Nodes": [
         {
-            "Name": "Node1",
+            "Name": "Node0",
             "IsRelay": true,
             "Wallets": [
                 {
-                    "Name": "Wallet1",
+                    "Name": "Wallet0",
                     "ParticipationOnly": false
                 }
             ]
         },
         {
-            "Name": "Node2",
+            "Name": "Node1",
             "Wallets": [
                 {
-                    "Name": "Wallet2",
+                    "Name": "Wallet1",
                     "ParticipationOnly": false
                 },
                 {
-                    "Name": "Wallet3",
+                    "Name": "Wallet2",
                     "ParticipationOnly": false
                 }
             ]
