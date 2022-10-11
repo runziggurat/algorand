@@ -1,5 +1,7 @@
 //! Useful setup constants.
 
+use tokio::time::Duration;
+
 /// Ziggurat's configuration directory.
 pub const ZIGGURAT_DIR: &str = ".ziggurat";
 
@@ -17,3 +19,19 @@ pub const PRIVATE_NETWORK_DIR: &str = "private_network";
 
 /// Node directory without an index. The correctly indexed node directory is "Node0".
 pub const NODE_DIR: &str = "Node";
+
+/// The address on which the relay node listens for incoming connections.
+///
+/// Non-relay nodes do not have this address configured.
+/// The address is named `NetAddress` in the [official Algorand
+/// documentation](https://developer.algorand.org/docs/run-a-node/reference/config/).
+pub const NET_ADDR_FILE: &str = "algod-listen.net";
+
+/// The address on which the node listens for REST API calls.
+///
+/// The address is named `EndpointAddress` in the [official Algorand
+/// documentation](https://developer.algorand.org/docs/run-a-node/reference/config/).
+pub const REST_ADDR_FILE: &str = "algod.net";
+
+/// Timeout when waiting for loading of addresses.
+pub const LOAD_ADDR_TIMEOUT_SECS: Duration = Duration::from_secs(1);
