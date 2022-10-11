@@ -2,6 +2,7 @@
 
 use std::{
     fs, io,
+    net::SocketAddr,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
 };
@@ -89,7 +90,7 @@ impl Node {
     }
 
     /// Starts the node instance.
-    pub fn start(&mut self) {
+    pub async fn start(&mut self) {
         let (stdout, stderr) = match self.conf.log_to_stdout {
             true => (Stdio::inherit(), Stdio::inherit()),
             false => (Stdio::null(), Stdio::null()),
@@ -114,12 +115,21 @@ impl Node {
             .expect("Node failed to start");
         self.child = Some(child);
 
+        // Once the node is started, fetch its addresses.
+        self.conf
+            .load_addrs()
+            .await
+            .expect("Couldn't load the node's addresses.");
+
         // TODO(Rqnsom) wait for the connection to confirm.
     }
 
     /// Stops the node instance.
     pub fn stop(&mut self) -> io::Result<ChildExitCode> {
         // Cannot use 'mut self' due to the Drop impl.
+
+        self.conf.net_addr = None;
+        self.conf.rest_api_addr = None;
 
         let child = match self.child {
             Some(ref mut child) => child,
@@ -137,6 +147,17 @@ impl Node {
             Some(exit) if exit == 0 => Ok(ChildExitCode::Success),
             Some(exit) => Ok(ChildExitCode::ErrorCode(Some(exit))),
         }
+    }
+
+    /// Returns the network address of the node.
+    /// Non-relay nodes do not have this address configured.
+    pub fn net_addr(&self) -> Option<SocketAddr> {
+        self.conf.net_addr
+    }
+
+    /// Returns the REST API address of the node.
+    pub fn rest_api_addr(&self) -> Option<SocketAddr> {
+        self.conf.rest_api_addr
     }
 
     fn get_path(node_dir_idx: usize) -> io::Result<PathBuf> {
@@ -170,16 +191,28 @@ mod test {
         let target = TempDir::new().expect("Couldn't create a temporary directory");
 
         let mut node = builder
-            .log_to_stdout(true)
+            .log_to_stdout(false)
             .build(target.path())
             .expect("Unable to build the node");
 
-        node.start();
+        // No addresses before the node is started.
+        assert!(node.rest_api_addr().is_none());
+        assert!(node.net_addr().is_none());
+
+        node.start().await;
+        // Addresses are available once the node is started.
+        assert!(node.rest_api_addr().is_some());
+        assert!(node.net_addr().is_some());
+
         sleep(SLEEP).await;
+
         assert!(node.stop().is_ok());
+        // Addresses are deleted after the node is stopped.
+        assert!(node.rest_api_addr().is_none());
+        assert!(node.net_addr().is_none());
 
         // Restart the node.
-        node.start();
+        node.start().await;
         sleep(SLEEP).await;
         // The node will be stopped via the Drop impl.
     }

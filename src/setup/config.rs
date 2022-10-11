@@ -3,13 +3,18 @@
 use std::{
     ffi::OsString,
     fs,
+    net::SocketAddr,
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use anyhow::Result;
 use serde::Deserialize;
+use tokio::time::{sleep, timeout, Duration};
 
-use crate::setup::constants::SETUP_CONFIG;
+use crate::setup::constants::{
+    LOAD_ADDR_TIMEOUT_SECS, NET_ADDR_FILE, REST_ADDR_FILE, SETUP_CONFIG,
+};
 
 /// Startup configuration for the node.
 #[derive(Debug, Clone, Default)]
@@ -18,6 +23,63 @@ pub struct NodeConfig {
     pub log_to_stdout: bool,
     /// The path of the cache directory of the node.
     pub path: PathBuf,
+    /// The network socket address of the node.
+    pub net_addr: Option<SocketAddr>,
+    /// The REST API socket address of the node.
+    pub rest_api_addr: Option<SocketAddr>,
+}
+
+impl NodeConfig {
+    /// Continuously try to read a string from a file.
+    async fn try_read_to_string(file_path: &Path) -> String {
+        loop {
+            match tokio::fs::read_to_string(&file_path).await {
+                Ok(content) => {
+                    if SocketAddr::from_str(content.trim().trim_start_matches("http://")).is_err() {
+                        continue;
+                    }
+                    return content;
+                }
+                Err(e) => {
+                    if e.kind() == tokio::io::ErrorKind::NotFound {
+                        sleep(Duration::from_millis(100)).await;
+                        continue;
+                    }
+                }
+            };
+        }
+    }
+
+    /// Fetches the node's addresses.
+    pub async fn load_addrs(&mut self) -> Result<()> {
+        let mut local_addr = String::new();
+        let mut rest_addr = String::new();
+
+        timeout(LOAD_ADDR_TIMEOUT_SECS, async {
+            let local_addr_path = self.path.join(NET_ADDR_FILE);
+            let rest_addr_path = self.path.join(REST_ADDR_FILE);
+
+            local_addr = NodeConfig::try_read_to_string(&local_addr_path).await;
+            rest_addr = NodeConfig::try_read_to_string(&rest_addr_path).await;
+        })
+        .await
+        .expect("Couldn't fetch node's addresses");
+
+        self.net_addr = Some(
+            SocketAddr::from_str(
+                local_addr
+                    .trim()
+                    .strip_prefix("http://")
+                    .expect("The http prefix is missing."),
+            )
+            .expect("Couldn't create the network socket address."),
+        );
+        self.rest_api_addr = Some(
+            SocketAddr::from_str(rest_addr.trim())
+                .expect("Couldn't create the REST API socket address."),
+        );
+        Ok(())
+    }
 }
 
 /// Convenience struct for reading Ziggurat's configuration file.
