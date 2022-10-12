@@ -3,9 +3,12 @@
 #
 # The private network setup is explained here:
 # [1] https://developer.algorand.org/docs/clis/goal/network/create/
-
+#
 # Telemetry config settings are explained here:
 # [2] https://developer.algorand.org/docs/run-a-node/reference/telemetry-config/
+#
+# BaseLoggerDebugLevel is explained here:
+# [3] https://developer.algorand.org/docs/run-a-node/reference/config/
 
 set -e
 
@@ -45,8 +48,22 @@ setup_private_network() {
     echo
 
     # Copy telemetry config file manually to ensure nodes don't look for the global config file at ~/.algorand/
-    cp tools/logging.config $ZIGGURAT_ALGORAND_PN_DIR/Node0/  # see [2]
-    cp tools/logging.config $ZIGGURAT_ALGORAND_PN_DIR/Node1/  # see [2]
+    cp tools/logging.config "$ZIGGURAT_ALGORAND_PN_DIR/Node0/"  # see [2]
+    cp tools/logging.config "$ZIGGURAT_ALGORAND_PN_DIR/Node1/"  # see [2]
+
+    update_config_file "$ZIGGURAT_ALGORAND_PN_DIR/Node0"
+    update_config_file "$ZIGGURAT_ALGORAND_PN_DIR/Node1"
+}
+
+# Function appends attributes after the "Version" attribute in the configuration JSON file.
+# The "Version" attribute must always be the first attribute specified in the JSON file.
+#
+# The input argument is the location of the node's directory.
+update_config_file() {
+    CFG_FILE="$1/config.json"
+
+    # The default (unspecified) base log level is 4 (info). Use the most verbose log level 5 (debug / verbose) instead.
+    echo "$(awk 'NR==3{print "\t\"BaseLoggerDebugLevel\": 5,"}1' $CFG_FILE)" > $CFG_FILE # see [3]
 }
 
 # Verify the algod binary path using the version option
