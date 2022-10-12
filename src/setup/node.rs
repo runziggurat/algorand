@@ -9,8 +9,16 @@ use std::{
 
 use anyhow::Result;
 use fs_extra::dir;
+use tokio::{
+    io::AsyncWriteExt,
+    net::TcpStream,
+    time::{sleep, Duration},
+};
 
-use super::constants::{ALGORAND_SETUP_DIR, NODE_DIR, PRIVATE_NETWORK_DIR};
+use super::constants::{
+    ALGORAND_SETUP_DIR, CONNECTION_TIMEOUT, NET_ADDR_FILE, NODE_DIR, PRIVATE_NETWORK_DIR,
+    REST_ADDR_FILE,
+};
 use crate::setup::{
     config::{NodeConfig, NodeMetaData},
     get_algorand_work_path,
@@ -89,6 +97,24 @@ impl Node {
             .unwrap()
     }
 
+    /// Waits the node to start responding.
+    async fn wait_for_start(addr: SocketAddr) {
+        tokio::time::timeout(CONNECTION_TIMEOUT, async {
+            const SLEEP: Duration = Duration::from_millis(100);
+
+            loop {
+                if let Ok(mut stream) = TcpStream::connect(addr).await {
+                    stream.shutdown().await.unwrap();
+                    break;
+                }
+
+                sleep(SLEEP).await;
+            }
+        })
+        .await
+        .unwrap();
+    }
+
     /// Starts the node instance.
     pub async fn start(&mut self) {
         let (stdout, stderr) = match self.conf.log_to_stdout {
@@ -121,14 +147,21 @@ impl Node {
             .await
             .expect("Couldn't load the node's addresses.");
 
-        // TODO(Rqnsom) wait for the connection to confirm.
+        Node::wait_for_start(self.conf.net_addr.unwrap()).await;
     }
 
     /// Stops the node instance.
     pub fn stop(&mut self) -> io::Result<ChildExitCode> {
         // Cannot use 'mut self' due to the Drop impl.
 
+        // Remove address files since addresses may change if the node is restarted.
+        let remove_file = |file_name| match fs::remove_file(self.conf.path.join(file_name)) {
+            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("Unexpected error: {:?}", e),
+            _ => (),
+        };
+        remove_file(NET_ADDR_FILE);
         self.conf.net_addr = None;
+        remove_file(REST_ADDR_FILE);
         self.conf.rest_api_addr = None;
 
         let child = match self.child {
@@ -179,7 +212,6 @@ impl Drop for Node {
 #[cfg(test)]
 mod test {
     use tempfile::TempDir;
-    use tokio::time::{sleep, Duration};
 
     use super::*;
 

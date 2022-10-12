@@ -35,3 +35,6 @@ pub const REST_ADDR_FILE: &str = "algod.net";
 
 /// Timeout when waiting for loading of addresses.
 pub const LOAD_ADDR_TIMEOUT_SECS: Duration = Duration::from_secs(1);
+
+/// Timeout when waiting for [Node](crate::setup::node::Node)'s start.
+pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(10);

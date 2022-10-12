@@ -52,14 +52,14 @@ impl NodeConfig {
 
     /// Fetches the node's addresses.
     pub async fn load_addrs(&mut self) -> Result<()> {
-        let mut local_addr = String::new();
+        let mut net_addr = String::new();
         let mut rest_addr = String::new();
 
         timeout(LOAD_ADDR_TIMEOUT_SECS, async {
-            let local_addr_path = self.path.join(NET_ADDR_FILE);
+            let net_addr_path = self.path.join(NET_ADDR_FILE);
             let rest_addr_path = self.path.join(REST_ADDR_FILE);
 
-            local_addr = NodeConfig::try_read_to_string(&local_addr_path).await;
+            net_addr = NodeConfig::try_read_to_string(&net_addr_path).await;
             rest_addr = NodeConfig::try_read_to_string(&rest_addr_path).await;
         })
         .await
@@ -67,7 +67,7 @@ impl NodeConfig {
 
         self.net_addr = Some(
             SocketAddr::from_str(
-                local_addr
+                net_addr
                     .trim()
                     .strip_prefix("http://")
                     .expect("The http prefix is missing."),
