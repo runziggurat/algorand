@@ -84,8 +84,7 @@ impl SyntheticNode {
     ///
     /// If the handshake protocol is enabled it will be executed as well.
     pub async fn connect(&self, target: SocketAddr) -> io::Result<()> {
-        self.inner.node().connect(target).await?;
-        Ok(())
+        self.inner.node().connect(target).await
     }
 
     /// Indicates if the `addr` is registered as a connected peer.
