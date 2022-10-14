@@ -11,6 +11,16 @@ fs_extra = "1.2"
 home = "0.5.3"
 tempfile = "3.3"
 toml = "0.5.9"
+async-trait = "0.1"
+bytes = "1"
+futures-util = { version = "0.3", features = ["sink"] }
+httparse = "1.8"
+tungstenite = "0.17"
+tokio-tungstenite = "0.17"
+websocket-codec = "0.5"
+tokio-util = { version = "0.7", features = ["codec"] }
+pea2pea = "0.40"
+base64 = "0.13"
 
 [dependencies.serde]
 version = "1"
@@ -19,3 +29,12 @@ features = [ "derive" ]
 [dependencies.tokio]
 version = "1"
 features = [ "full" ]
+
+[dependencies.tracing]
+version = "0.1"
+default-features = false
+
+[dependencies.tracing-subscriber]
+version = "0.3"
+default-features = false
+features = ["ansi", "env-filter", "fmt", "parking_lot", "smallvec"]
