@@ -8,6 +8,14 @@ use tracing::*;
 
 use crate::tools::inner_node::InnerNode;
 
+const USER_AGENT: &str = "algod/3.9 (stable; commit=921e8f6f+; 0) linux(amd64)";
+const SEC_WEBSOCKET_VERSION: &str = "13";
+const X_AG_ACCEPT_VERSION: &str = "2.1";
+const X_AG_INSTANCE_NAME: &str = "synth_node";  // Can be shared between different synthetic nodes
+const X_AG_NODE_RANDOM: &str = "cGVhMnBlYQ==";  // Can be shared between different synthetic nodes
+const X_AG_ALGORAND_VERSION: &str = "2.1";
+const X_AG_ALGORAND_GENESIS: &str = "private-v1";
+
 // Info from RFC 6455, section 4.1, page 18:
 //
 // The request MUST include a header field with the name
@@ -29,12 +37,8 @@ struct SecWebSocket {
 impl SecWebSocket {
     /// Generate key-accept pair for a WebSocket handshake.
     fn generate() -> Self {
-        // TODO(Rqnsom): Randomize 16 bytes.
-        let key: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-        let key = base64::encode(key);
-
+        let key = tungstenite::handshake::client::generate_key();
         let accept = tungstenite::handshake::derive_accept_key(key.as_bytes());
-
         Self { key, accept }
     }
 }
@@ -54,20 +58,18 @@ impl Handshake for InnerNode {
                 let mut req = Vec::new();
                 req.extend_from_slice(b"GET /v1/private-v1/gossip HTTP/1.1\r\n");
                 req.extend_from_slice(format!("Host: {}\r\n", conn_addr).as_bytes());
-                req.extend_from_slice(
-                    b"User-Agent: algod/3.9 (stable; commit=921e8f6f+; 0) linux(amd64)\r\n",
-                );
+                req.extend_from_slice(format!("User-Agent: {}\r\n", USER_AGENT).as_bytes());
                 req.extend_from_slice(b"Connection: Upgrade\r\n");
                 req.extend_from_slice(format!("Sec-WebSocket-Key: {}\r\n", sec_ws.key).as_bytes());
-                req.extend_from_slice(b"Sec-WebSocket-Version: 13\r\n");
+                req.extend_from_slice(format!("Sec-WebSocket-Version: {}\r\n", SEC_WEBSOCKET_VERSION).as_bytes());
                 req.extend_from_slice(b"Upgrade: websocket\r\n");
-                req.extend_from_slice(b"X-Algorand-Accept-Version: 2.1\r\n");
-                req.extend_from_slice(b"X-Algorand-Instancename: synth_node\r\n");
+                req.extend_from_slice(format!("X-Algorand-Accept-Version: {}\r\n", X_AG_ACCEPT_VERSION).as_bytes());
+                req.extend_from_slice(format!("X-Algorand-Instancename: {}\r\n", X_AG_INSTANCE_NAME).as_bytes());
                 req.extend_from_slice(b"X-Algorand-Location: \r\n");
-                req.extend_from_slice(b"X-Algorand-Noderandom: cGVhMnBlYQ==\r\n");
+                req.extend_from_slice(format!("X-Algorand-Noderandom: {}\r\n", X_AG_NODE_RANDOM).as_bytes());
                 // req.extend_from_slice(b"X-Algorand-Telid: d12c01a5-4ca4-4be3-a394-68c8913f3883\r\n"); // TODO: Investigate more
-                req.extend_from_slice(b"X-Algorand-Version: 2.1\r\n");
-                req.extend_from_slice(b"X-Algorand-Genesis: private-v1\r\n");
+                req.extend_from_slice(format!("X-Algorand-Version: {}\r\n", X_AG_ALGORAND_VERSION).as_bytes());
+                req.extend_from_slice(format!("X-Algorand-Genesis: {}\r\n", X_AG_ALGORAND_GENESIS).as_bytes());
                 req.extend_from_slice(b"\r\n");
                 let req = Bytes::from(req);
 
