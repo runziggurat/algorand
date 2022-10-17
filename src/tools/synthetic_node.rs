@@ -9,7 +9,10 @@ use pea2pea::{
     protocols::{Reading, Writing},
     Config as NodeConfig, Node, Pea2Pea,
 };
-use tokio::sync::mpsc::{self, Receiver};
+use tokio::{
+    sync::mpsc::{self, Receiver},
+    time::{sleep, Duration},
+};
 use websocket_codec::Message;
 
 use crate::tools::inner_node::InnerNode;
@@ -90,6 +93,34 @@ impl SyntheticNode {
     /// Indicates if the `addr` is registered as a connected peer.
     pub fn is_connected(&self, addr: SocketAddr) -> bool {
         self.inner.node().is_connected(addr)
+    }
+
+    /// Returns the number of connected peers.
+    pub fn num_connected(&self) -> usize {
+        self.inner.node().num_connected()
+    }
+
+    /// Returns the list of active connections for this node.
+    pub fn connected_peers(&self) -> Vec<SocketAddr> {
+        self.inner.node().connected_addrs()
+    }
+
+    /// Waits until the node has at least one connection, and returns its SocketAddr.
+    pub async fn wait_for_connection(&self) -> SocketAddr {
+        const SLEEP: Duration = Duration::from_millis(50);
+        loop {
+            // Mutating the collection is alright since this is a copy of the connections and not the actual list.
+            if let Some(addr) = self.connected_peers().pop() {
+                return addr;
+            }
+
+            sleep(SLEEP).await;
+        }
+    }
+
+    /// Returns the listening address of the node.
+    pub fn listening_addr(&self) -> io::Result<SocketAddr> {
+        self.inner.node().listening_addr()
     }
 
     /// Gracefully shuts down the node.
