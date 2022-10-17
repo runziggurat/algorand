@@ -1,6 +1,7 @@
 //! Utilities for node configuration.
 
 use std::{
+    collections::HashSet,
     ffi::OsString,
     fs,
     net::SocketAddr,
@@ -27,6 +28,8 @@ pub struct NodeConfig {
     pub net_addr: Option<SocketAddr>,
     /// The REST API socket address of the node.
     pub rest_api_addr: Option<SocketAddr>,
+    /// The initial peer set of the node.
+    pub initial_peers: HashSet<SocketAddr>,
 }
 
 impl NodeConfig {

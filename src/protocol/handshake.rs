@@ -1,7 +1,7 @@
 use std::io;
 
 use bytes::Bytes;
-use futures_util::{sink::SinkExt, stream::TryStreamExt};
+use futures_util::{sink::SinkExt, stream::TryStreamExt, StreamExt};
 use pea2pea::{protocols::Handshake, Connection, ConnectionSide, Pea2Pea};
 use tokio_util::codec::{BytesCodec, Framed};
 use tracing::*;
@@ -11,8 +11,8 @@ use crate::tools::inner_node::InnerNode;
 const USER_AGENT: &str = "algod/3.9 (stable; commit=921e8f6f+; 0) linux(amd64)";
 const SEC_WEBSOCKET_VERSION: &str = "13";
 const X_AG_ACCEPT_VERSION: &str = "2.1";
-const X_AG_INSTANCE_NAME: &str = "synth_node";  // Can be shared between different synthetic nodes
-const X_AG_NODE_RANDOM: &str = "cGVhMnBlYQ==";  // Can be shared between different synthetic nodes
+const X_AG_INSTANCE_NAME: &str = "synth_node"; // Can be shared between different synthetic nodes
+const X_AG_NODE_RANDOM: &str = "cGVhMnBlYQ=="; // Can be shared between different synthetic nodes
 const X_AG_ALGORAND_VERSION: &str = "2.1";
 const X_AG_ALGORAND_GENESIS: &str = "private-v1";
 
@@ -61,15 +61,27 @@ impl Handshake for InnerNode {
                 req.extend_from_slice(format!("User-Agent: {}\r\n", USER_AGENT).as_bytes());
                 req.extend_from_slice(b"Connection: Upgrade\r\n");
                 req.extend_from_slice(format!("Sec-WebSocket-Key: {}\r\n", sec_ws.key).as_bytes());
-                req.extend_from_slice(format!("Sec-WebSocket-Version: {}\r\n", SEC_WEBSOCKET_VERSION).as_bytes());
+                req.extend_from_slice(
+                    format!("Sec-WebSocket-Version: {}\r\n", SEC_WEBSOCKET_VERSION).as_bytes(),
+                );
                 req.extend_from_slice(b"Upgrade: websocket\r\n");
-                req.extend_from_slice(format!("X-Algorand-Accept-Version: {}\r\n", X_AG_ACCEPT_VERSION).as_bytes());
-                req.extend_from_slice(format!("X-Algorand-Instancename: {}\r\n", X_AG_INSTANCE_NAME).as_bytes());
+                req.extend_from_slice(
+                    format!("X-Algorand-Accept-Version: {}\r\n", X_AG_ACCEPT_VERSION).as_bytes(),
+                );
+                req.extend_from_slice(
+                    format!("X-Algorand-Instancename: {}\r\n", X_AG_INSTANCE_NAME).as_bytes(),
+                );
                 req.extend_from_slice(b"X-Algorand-Location: \r\n");
-                req.extend_from_slice(format!("X-Algorand-Noderandom: {}\r\n", X_AG_NODE_RANDOM).as_bytes());
+                req.extend_from_slice(
+                    format!("X-Algorand-Noderandom: {}\r\n", X_AG_NODE_RANDOM).as_bytes(),
+                );
                 // req.extend_from_slice(b"X-Algorand-Telid: d12c01a5-4ca4-4be3-a394-68c8913f3883\r\n"); // TODO: Investigate more
-                req.extend_from_slice(format!("X-Algorand-Version: {}\r\n", X_AG_ALGORAND_VERSION).as_bytes());
-                req.extend_from_slice(format!("X-Algorand-Genesis: {}\r\n", X_AG_ALGORAND_GENESIS).as_bytes());
+                req.extend_from_slice(
+                    format!("X-Algorand-Version: {}\r\n", X_AG_ALGORAND_VERSION).as_bytes(),
+                );
+                req.extend_from_slice(
+                    format!("X-Algorand-Genesis: {}\r\n", X_AG_ALGORAND_GENESIS).as_bytes(),
+                );
                 req.extend_from_slice(b"\r\n");
                 let req = Bytes::from(req);
 
@@ -93,14 +105,57 @@ impl Handshake for InnerNode {
                         error!(parent: self.node().span(), "invalid Sec-WebSocket-Accept!");
                         return Err(io::ErrorKind::InvalidData.into());
                     }
-                    trace!(parent: self.node().span(), "valid sec-websocket-accept");
+                    trace!(parent: self.node().span(), "valid Sec-WebSocket-Accept");
                 } else {
-                    error!(parent: self.node().span(), "missing Sec-WebSocket-Key!");
+                    error!(parent: self.node().span(), "missing Sec-WebSocket-Accept!");
                     return Err(io::ErrorKind::InvalidData.into());
                 };
             }
             ConnectionSide::Responder => {
-                // TODO(Rqnsom)
+                let peer_addr = stream.peer_addr().unwrap();
+                let mut framed = Framed::new(stream, BytesCodec::default());
+
+                let req = framed.next().await.unwrap().unwrap();
+                info!(parent: self.node().span(), "{:?}: received handshake message: {:?}", peer_addr, req);
+
+                let mut req_headers = [httparse::EMPTY_HEADER; 32];
+                let mut parsed_req = httparse::Request::new(&mut req_headers);
+                parsed_req.parse(&req).unwrap();
+
+                let swa = if let Some(swk) = parsed_req
+                    .headers
+                    .iter()
+                    .find(|h| h.name.to_ascii_lowercase() == "sec-websocket-key")
+                {
+                    tungstenite::handshake::derive_accept_key(swk.value)
+                } else {
+                    error!(parent: self.node().span(), "missing Sec-WebSocket-Key!");
+                    return Err(io::ErrorKind::InvalidData.into());
+                };
+
+                let mut rsp = Vec::new();
+                rsp.extend_from_slice(b"HTTP/1.1 101 Switching Protocols\r\n");
+                rsp.extend_from_slice(b"Upgrade: websocket\r\n");
+                rsp.extend_from_slice(b"Connection: Upgrade\r\n");
+                rsp.extend_from_slice(format!("Sec-Websocket-Accept: {}\r\n", swa).as_bytes());
+                rsp.extend_from_slice(
+                    format!("X-Algorand-Instancename: {}\r\n", X_AG_INSTANCE_NAME).as_bytes(),
+                );
+                rsp.extend_from_slice(b"X-Algorand-Location:\r\n");
+                rsp.extend_from_slice(
+                    format!("X-Algorand-Noderandom: {}\r\n", X_AG_NODE_RANDOM).as_bytes(),
+                );
+                rsp.extend_from_slice(
+                    format!("X-Algorand-Version: {}\r\n", X_AG_ACCEPT_VERSION).as_bytes(),
+                );
+                rsp.extend_from_slice(
+                    format!("X-Algorand-Genesis: {}\r\n", X_AG_ALGORAND_GENESIS).as_bytes(),
+                );
+                rsp.extend_from_slice(b"\r\n");
+                let rsp = Bytes::from(rsp);
+
+                info!(parent: self.node().span(), "sending handshake message: {:?}", rsp);
+                framed.send(rsp).await.unwrap();
             }
         }
 

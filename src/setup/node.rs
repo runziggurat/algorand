@@ -1,6 +1,7 @@
 //! High level APIs and types for node setup and teardown.
 
 use std::{
+    collections::HashSet,
     fs, io,
     net::SocketAddr,
     path::{Path, PathBuf},
@@ -78,6 +79,12 @@ impl NodeBuilder {
         self.conf.log_to_stdout = log_to_stdout;
         self
     }
+
+    /// Sets initial peers for the node.
+    pub fn initial_peers<I: IntoIterator<Item = SocketAddr>>(mut self, addrs: I) -> Self {
+        self.conf.initial_peers = addrs.into_iter().collect::<HashSet<SocketAddr>>();
+        self
+    }
 }
 
 pub struct Node {
@@ -131,6 +138,20 @@ impl Node {
             self.meta.start_args.push("-o".into());
         }
 
+        if !self.conf.initial_peers.is_empty() {
+            // Override phonebook with peer ip:port (or semicolon separated list: ip:port;ip:port;...)
+            // with the option '-p'
+            self.meta.start_args.push("-p".into());
+
+            let mut ip_list = String::new();
+            for ip in self.conf.initial_peers.iter() {
+                ip_list.push_str(&format!("{};", ip));
+            }
+            ip_list.pop().unwrap(); // Remove a trailing ';'
+
+            self.meta.start_args.push(ip_list.into());
+        }
+
         let child = Command::new(&self.meta.start_command)
             .current_dir(&self.meta.path)
             .args(&self.meta.start_args)
@@ -182,7 +203,7 @@ impl Node {
         }
     }
 
-    /// Returns the network address of the node.
+    /// Returns the listening network address of the node.
     /// Non-relay nodes do not have this address configured.
     pub fn net_addr(&self) -> Option<SocketAddr> {
         self.conf.net_addr
