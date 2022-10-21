@@ -66,20 +66,20 @@ impl NodeConfig {
             rest_addr = NodeConfig::try_read_to_string(&rest_addr_path).await;
         })
         .await
-        .expect("Couldn't fetch node's addresses");
+        .expect("couldn't fetch node's addresses");
 
         self.net_addr = Some(
             SocketAddr::from_str(
                 net_addr
                     .trim()
                     .strip_prefix("http://")
-                    .expect("The http prefix is missing."),
+                    .expect("the http prefix is missing"),
             )
-            .expect("Couldn't create the network socket address."),
+            .expect("couldn't create the network socket address"),
         );
         self.rest_api_addr = Some(
             SocketAddr::from_str(rest_addr.trim())
-                .expect("Couldn't create the REST API socket address."),
+                .expect("couldn't create the REST API socket address"),
         );
         Ok(())
     }
