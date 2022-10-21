@@ -6,9 +6,8 @@ use pea2pea::{protocols::Handshake, Connection, ConnectionSide, Pea2Pea};
 use tokio_util::codec::{BytesCodec, Framed};
 use tracing::*;
 
-use crate::tools::inner_node::InnerNode;
+use crate::{protocol::constants::USER_AGENT, tools::inner_node::InnerNode};
 
-const USER_AGENT: &str = "algod/3.9 (stable; commit=921e8f6f+; 0) linux(amd64)";
 const SEC_WEBSOCKET_VERSION: &str = "13";
 const X_AG_ACCEPT_VERSION: &str = "2.1";
 const X_AG_INSTANCE_NAME: &str = "synth_node"; // Can be shared between different synthetic nodes

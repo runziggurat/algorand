@@ -91,3 +91,13 @@ The test index makes use of symbolic language in describing connection and messa
 
     Assert: the node’s peer count has increased to 1 and the synthetic node is an established peer.
 
+### ZG-CONFORMANCE-003
+
+    The node responds correctly to a block request message (V1 algod API) which is how newly connected node queries for block data.
+
+    <>
+    -> http GET /v1/block/{round}
+    <- http response with block-certificate data
+
+    Assert: the appropriate response is sent.
+
