@@ -1,3 +1,10 @@
+//! A REST API implementation is named RPC in the go-algorand code base. To maintain parity
+//! with the go-algorand codebase, the file is named RPC here.
+//!
+//! There are two REST API versions for algod:
+//! - [V1](https://developer.algorand.org/docs/rest-apis/algod/v1/) - which is deprecated but still used by the node.
+//! - [V2](https://developer.algorand.org/docs/rest-apis/algod/v2/)
+
 use std::{
     fmt::{self, Display, Formatter},
     time::Duration,
@@ -59,6 +66,8 @@ pub async fn wait_for_block(rpc_addr: &str, round: u64) -> Result<EncodedBlockCe
                 tracing::info!("block data {:?}", block);
                 return Ok(block);
             }
+
+            // On average, new blocks are generated every 4 seconds, so a long wait is fine here.
             sleep(Duration::from_secs(1)).await;
         }
     })

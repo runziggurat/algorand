@@ -33,37 +33,30 @@ async fn c003_V1_BLOCK_ROUND_get_block() {
 
     let rpc_addr = net_addr.to_string();
 
-    // Get block for the round 0.
-    let round = 0;
-    let block_cert = rpc::wait_for_block(&rpc_addr, round)
-        .await
-        .expect("Couldn't get a block");
-    assert_eq!(round, block_cert.block.round, "Invalid round");
-    assert!(block_cert.block.sortition_seed.is_some(), "Seed not found");
-    assert!(
-        block_cert.block.genesis_id_hash.is_some(),
-        "Genesis hash not found"
-    );
-    assert!(
-        block_cert.block.prevous_block_hash.is_none(),
-        "Previous block hash shouldn't be found for the first block"
-    );
+    for round in [0, 1] {
+        let block_cert = rpc::wait_for_block(&rpc_addr, round)
+            .await
+            .expect("Couldn't get a block");
 
-    // Get block for the round 1.
-    let round = 1;
-    let block_cert = rpc::wait_for_block(&rpc_addr, round)
-        .await
-        .expect("Couldn't get a block");
-    assert_eq!(round, block_cert.block.round, "Invalid round");
-    assert!(block_cert.block.sortition_seed.is_some(), "Seed not found");
-    assert!(
-        block_cert.block.genesis_id_hash.is_some(),
-        "Genesis hash not found"
-    );
-    assert!(
-        block_cert.block.prevous_block_hash.is_some(),
-        "Previous block hash not found"
-    );
+        assert_eq!(round, block_cert.block.round, "Invalid round");
+        assert!(block_cert.block.sortition_seed.is_some(), "Seed not found");
+        assert!(
+            block_cert.block.genesis_id_hash.is_some(),
+            "Genesis hash not found"
+        );
+
+        if round == 0 {
+            assert!(
+                block_cert.block.prevous_block_hash.is_none(),
+                "Previous block hash shouldn't be found for the first round"
+            );
+        } else {
+            assert!(
+                block_cert.block.prevous_block_hash.is_some(),
+                "Previous block hash not found"
+            );
+        }
+    }
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
