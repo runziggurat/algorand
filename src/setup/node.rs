@@ -100,7 +100,7 @@ impl Node {
     /// Creates a NodeBuilder.
     pub fn builder() -> NodeBuilder {
         NodeBuilder::new()
-            .map_err(|e| format!("Unable to create a builder: {:?}", e))
+            .map_err(|e| format!("unable to create a builder: {:?}", e))
             .unwrap()
     }
 
@@ -159,14 +159,14 @@ impl Node {
             .stdout(stdout)
             .stderr(stderr)
             .spawn()
-            .expect("Node failed to start");
+            .expect("node failed to start");
         self.child = Some(child);
 
         // Once the node is started, fetch its addresses.
         self.conf
             .load_addrs()
             .await
-            .expect("Couldn't load the node's addresses.");
+            .expect("couldn't load the node's addresses");
 
         Node::wait_for_start(self.conf.net_addr.unwrap()).await;
     }
@@ -177,7 +177,7 @@ impl Node {
 
         // Remove address files since addresses may change if the node is restarted.
         let remove_file = |file_name| match fs::remove_file(self.conf.path.join(file_name)) {
-            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("Unexpected error: {:?}", e),
+            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("unexpected error: {:?}", e),
             _ => (),
         };
         remove_file(NET_ADDR_FILE);
@@ -241,12 +241,12 @@ mod test {
     #[tokio::test]
     async fn start_stop_the_node() {
         let builder = Node::builder();
-        let target = TempDir::new().expect("Couldn't create a temporary directory");
+        let target = TempDir::new().expect("couldn't create a temporary directory");
 
         let mut node = builder
             .log_to_stdout(false)
             .build(target.path())
-            .expect("Unable to build the node");
+            .expect("unable to build the node");
 
         // No addresses before the node is started.
         assert!(node.rest_api_addr().is_none());
