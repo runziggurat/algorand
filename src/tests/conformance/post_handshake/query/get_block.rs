@@ -7,8 +7,8 @@ use crate::{
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn c003_V1_BLOCK_ROUND_get_block() {
-    // ZG-CONFORMANCE-003
+async fn c004_V1_BLOCK_ROUND_get_block() {
+    // ZG-CONFORMANCE-004
 
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");

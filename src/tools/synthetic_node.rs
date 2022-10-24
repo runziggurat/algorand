@@ -11,11 +11,11 @@ use pea2pea::{
 };
 use tokio::{
     sync::mpsc::{self, Receiver},
-    time::{sleep, Duration},
+    time::{sleep, timeout, Duration},
 };
 use websocket_codec::Message;
 
-use crate::tools::inner_node::InnerNode;
+use crate::tools::{constants::EXPECT_MSG_TIMEOUT, inner_node::InnerNode};
 
 /// Enables tracing for all [`SyntheticNode`] instances (usually scoped by test).
 pub fn enable_tracing() {
@@ -135,5 +135,19 @@ impl SyntheticNode {
             Some(message) => message,
             None => panic!("all senders dropped!"),
         }
+    }
+
+    /// Expects a message.
+    pub async fn expect_message(&mut self, check: &dyn Fn(&Message) -> bool) -> bool {
+        timeout(EXPECT_MSG_TIMEOUT, async {
+            loop {
+                let (_, message) = self.recv_message().await;
+                if check(&message) {
+                    return true;
+                }
+            }
+        })
+        .await
+        .is_ok()
     }
 }
