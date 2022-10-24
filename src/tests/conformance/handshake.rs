@@ -91,7 +91,7 @@ async fn c003_t1_expect_no_messages_before_handshake() {
     // ZG-CONFORMANCE-003
     //
     // A synthetic node with a disabled handshake procedure expects zero messages
-    // after it just connects to the node.
+    // after it initiates a connection with the node.
 
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
@@ -130,7 +130,7 @@ async fn c003_t2_expect_no_messages_before_handshake() {
     // ZG-CONFORMANCE-003
     //
     // A synthetic node with a disabled handshake procedure expects zero messages
-    // after the node tries to initiate the connection.
+    // after receiving a connection initiated by the node.
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
