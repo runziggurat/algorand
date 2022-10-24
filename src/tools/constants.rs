@@ -2,5 +2,8 @@
 
 use tokio::time::Duration;
 
-/// Timeout when waiting for expected message / node's state.
+/// Connection timeout.
 pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Timeout when waiting for an expected message or a change in the node's state.
+pub const EXPECT_MSG_TIMEOUT: Duration = Duration::from_secs(10);

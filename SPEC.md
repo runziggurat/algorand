@@ -93,6 +93,11 @@ The test index makes use of symbolic language in describing connection and messa
 
 ### ZG-CONFORMANCE-003
 
+    The node should *NOT* send any messages after connection if there was no handshake.
+    The test waits for the predefined amount of time, ensuring no messages were received.
+
+### ZG-CONFORMANCE-004
+
     The node responds correctly to a block request message (V1 algod API) which is how newly connected node queries for block data.
 
     <>
