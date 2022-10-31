@@ -14,7 +14,7 @@ The Ziggurat implementation for Algorand's `algod` nodes.
     tools/setup_env.sh
 ```
 
-In case algorand files are installed in a specific location, export that location to the `ALGORAND_BIN_PATH
+In case algorand files are installed in a specific location, export that location to the `ALGORAND_BIN_PATH`
 environment variable and rerun the setup script:
 ```zsh
     export ALGORAND_BIN_PATH="$HOME/node/"   # example path
