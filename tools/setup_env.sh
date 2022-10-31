@@ -80,8 +80,12 @@ if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
 fi
 REPO_ROOT=`git rev-parse --show-toplevel`
 if [ "`basename $REPO_ROOT`" != "algorand" ]; then
-    echo "Aborting. Use this script only from the ziggurat/algorand repo."
-    exit 1
+    # Wrong root directory, check for rename compared to origin url.
+    ORIGIN_URL=$(git config --local remote.origin.url|sed -n 's#.*/\([^.]*\)\.git#\1#p')
+    if [ "$ORIGIN_URL" != "algorand" ]; then
+        echo "Aborting. Use this script only from the ziggurat/algorand repo."
+        exit 1
+    fi
 fi
 
 # Setup the main ziggurat directory in the home directory
