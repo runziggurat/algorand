@@ -1,8 +1,8 @@
 use tempfile::TempDir;
 use tokio::time::timeout;
-use websocket_codec::Message;
 
 use crate::{
+    protocol::codecs::payload::Payload,
     setup::node::Node,
     tools::{constants::CONNECTION_TIMEOUT, synthetic_node::SyntheticNodeBuilder},
 };
@@ -115,7 +115,7 @@ async fn c003_t1_expect_no_messages_before_handshake() {
         .await
         .expect("unable to connect");
 
-    let expect_any_msg = |_: &Message| true;
+    let expect_any_msg = |_: &Payload| true;
     assert!(!synthetic_node.expect_message(&expect_any_msg).await);
 
     // Gracefully shut down the nodes.
@@ -149,7 +149,7 @@ async fn c003_t2_expect_no_messages_before_handshake() {
         .expect("unable to build the node");
     node.start().await;
 
-    let expect_any_msg = |_: &Message| true;
+    let expect_any_msg = |_: &Payload| true;
     assert!(!synthetic_node.expect_message(&expect_any_msg).await);
 
     // Gracefully shut down the nodes.
