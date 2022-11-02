@@ -67,7 +67,13 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 # Test Index
 
-The test index makes use of symbolic language in describing connection and message sending directions. As a convention, Ziggurat test nodes are to the left of the connection/message arrows, and Algod instances are to the right: `A -> B` and `A <- B`. In this way, `->` signifies "Ziggurat connects to Algod" and `<-` signifies the opposite. Furthermore, `-> ping` signifies "Ziggurat sends a `Ping` message to Algod" and `<- pong` signifies "Algod sends a `Pong` message to Ziggurat". Lastly, `<>` signifies a completed handshake, in either direction.
+| Symbol | Meaning                                                                |
+|--------|------------------------------------------------------------------------|
+| `-> A` | Ziggurat's synthetic node sends a message `A` to Algod                 |
+| `<- B` | Algod sends a message `B` to Ziggurat's synthetic node                 |
+| `>> C` | Ziggurat's synthetic node broadcasts a message `C` to all its peers    |
+| `<< D` | Algod broadcasts a message `D` to all its peers                        |
+| `<>`   | Signifies a completed handshake, in either direction                   |
 
 ## Conformance
 
