@@ -5,3 +5,11 @@ pub mod constants;
 mod handshake;
 mod reading;
 mod writing;
+
+macro_rules! invalid_data {
+    ($msg: expr) => {
+        std::io::Error::new(std::io::ErrorKind::InvalidData, $msg)
+    };
+}
+
+pub(crate) use invalid_data;
