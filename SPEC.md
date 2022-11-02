@@ -75,6 +75,27 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | `<< D` | Algod broadcasts a message `D` to all its peers                        |
 | `<>`   | Signifies a completed handshake, in either direction                   |
 
+## Network protocol test coverage
+
+|  Message           | Type              | Coverage | Tests                             |
+|--------------------|-------------------|----------|-----------------------------------|
+| Handshake          | HTTP              | ✅       | `C001`, `C002`, `C003`, `C004`    |
+| AgreementVoteTag   | WS data (Tag: AV) | ❌       |                                   |
+| MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`                            |
+| MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
+| NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
+| PingTag            | WS data (Tag: pi) | ❌       |                                   |
+| PingReplyTag       | WS data (Tag: pj) | ❌       |                                   |
+| ProposalPayloadTag | WS data (Tag: PP) | 🚧       | `C006`                            |
+| StateProofSigTag   | WS data (Tag: SP) | ❌       |                                   |
+| UniCatchupReqTag   | WS data (Tag: UC) | ❌       |                                   |
+| UniEnsBlockReqTag  | WS data (Tag: UE) | ❌       |                                   |
+| TopicMsgRespTag    | WS data (Tag: TS) | ❌       |                                   |
+| TxnTag             | WS data (Tag: TX) | ❌       |                                   |
+| VoteBundleTag      | WS data (Tag: VB) | ❌       |                                   |
+
+_TODO: Investigate more REST API calls and possibly include above._
+
 ## Conformance
 
 ### ZG-CONFORMANCE-001
