@@ -106,3 +106,9 @@ The test index makes use of symbolic language in describing connection and messa
 
     Assert: the appropriate response is sent.
 
+### ZG-CONFORMANCE-005
+
+    The node sends MsgOfInterest after the handshake.
+
+    <>
+    <- MsgOfInterest
