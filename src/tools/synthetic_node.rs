@@ -13,9 +13,11 @@ use tokio::{
     sync::mpsc::{self, Receiver},
     time::{sleep, timeout, Duration},
 };
-use websocket_codec::Message;
 
-use crate::tools::{constants::EXPECT_MSG_TIMEOUT, inner_node::InnerNode};
+use crate::{
+    protocol::codecs::payload::Payload,
+    tools::{constants::EXPECT_MSG_TIMEOUT, inner_node::InnerNode},
+};
 
 /// Enables tracing for all [`SyntheticNode`] instances (usually scoped by test).
 pub fn enable_tracing() {
@@ -79,7 +81,7 @@ impl SyntheticNodeBuilder {
 /// Convenient abstraction over a `pea2pea` node.
 pub struct SyntheticNode {
     inner: InnerNode,
-    inbound_rx: Receiver<(SocketAddr, Message)>,
+    inbound_rx: Receiver<(SocketAddr, Payload)>,
 }
 
 impl SyntheticNode {
@@ -129,8 +131,7 @@ impl SyntheticNode {
     }
 
     /// Reads a message from the inbound (internal) queue of the node.
-    pub async fn recv_message(&mut self) -> (SocketAddr, Message) {
-        // TODO(Rqnsom): Decode message.data()
+    pub async fn recv_message(&mut self) -> (SocketAddr, Payload) {
         match self.inbound_rx.recv().await {
             Some(message) => message,
             None => panic!("all senders dropped!"),
@@ -138,7 +139,7 @@ impl SyntheticNode {
     }
 
     /// Expects a message.
-    pub async fn expect_message(&mut self, check: &dyn Fn(&Message) -> bool) -> bool {
+    pub async fn expect_message(&mut self, check: &dyn Fn(&Payload) -> bool) -> bool {
         timeout(EXPECT_MSG_TIMEOUT, async {
             loop {
                 let (_, message) = self.recv_message().await;

@@ -2,16 +2,17 @@ use std::net::SocketAddr;
 
 use pea2pea::{protocols::Handshake, Node, Pea2Pea};
 use tokio::sync::mpsc::Sender;
-use websocket_codec::Message;
+
+use crate::protocol::codecs::payload::Payload;
 
 #[derive(Clone)]
 pub struct InnerNode {
     node: Node,
-    pub inbound_tx: Sender<(SocketAddr, Message)>,
+    pub inbound_tx: Sender<(SocketAddr, Payload)>,
 }
 
 impl InnerNode {
-    pub async fn new(node: Node, tx: Sender<(SocketAddr, Message)>, handshake: bool) -> Self {
+    pub async fn new(node: Node, tx: Sender<(SocketAddr, Payload)>, handshake: bool) -> Self {
         let node = Self {
             node,
             inbound_tx: tx,

@@ -3,27 +3,34 @@ use std::{io, net::SocketAddr};
 use pea2pea::{protocols::Reading, ConnectionSide, Pea2Pea};
 use tracing::*;
 
-use crate::{protocol::codecs::websocketcodec::WebsocketCodec, tools::inner_node::InnerNode};
+use crate::{
+    protocol::codecs::{algomsg::AlgoMsgCodec, payload::Payload},
+    tools::inner_node::InnerNode,
+};
 
 #[async_trait::async_trait]
 impl Reading for InnerNode {
-    type Message = websocket_codec::Message;
-    type Codec = WebsocketCodec;
+    type Message = Payload;
+    type Codec = AlgoMsgCodec;
 
     fn codec(&self, _addr: SocketAddr, _side: ConnectionSide) -> Self::Codec {
-        Default::default()
+        AlgoMsgCodec::new(self.node().span().clone())
     }
 
-    async fn process_message(&self, source: SocketAddr, message: Self::Message) -> io::Result<()> {
-        info!(parent: self.node().span(), "got a message from {}: {:?}", source, message);
+    /// Terminates WebSocket packets, decodes and forwards algod message [Payload] to synthetic node's inbound queue.
+    async fn process_message(&self, source: SocketAddr, payload: Self::Message) -> io::Result<()> {
+        let span = self.node().span();
+
+        debug!(parent: span, "got a message from {}", source);
         debug!(
-        parent: self.node().span(),
-        "sending the message to the node's inbound queue"
+            parent: span,
+            "sending the message to the node's inbound queue: {:?}", payload
         );
         self.inbound_tx
-            .send((source, message))
+            .send((source, payload))
             .await
             .expect("receiver dropped");
+
         Ok(())
     }
 }
