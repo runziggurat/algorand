@@ -6,6 +6,7 @@ use tracing::Span;
 
 use crate::protocol::{
     codecs::{
+        msgpack::ProposalPayload,
         tagmsg::Tag,
         topic::{MsgOfInterest, TopicCodec},
     },
@@ -13,8 +14,10 @@ use crate::protocol::{
 };
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum Payload {
     MsgOfInterest(MsgOfInterest),
+    ProposalPayload(Box<ProposalPayload>),
     NotImplemented,
 }
 
@@ -55,6 +58,11 @@ impl Decoder for PayloadCodec {
                 self.topic
                     .decode(src)?
                     .ok_or_else(|| invalid_data!("payload not found"))?
+            }
+            Tag::ProposalPayload => {
+                Payload::ProposalPayload(rmp_serde::from_slice(src).map_err(|_| {
+                    invalid_data!("Couldn't deserialize the ProposalPayload message")
+                })?)
             }
             _ => return Ok(Some(Payload::NotImplemented)),
         };
