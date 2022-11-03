@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use pea2pea::{protocols::Writing, ConnectionSide};
 
-use crate::{protocol::codecs::websocketcodec::WebsocketCodec, tools::inner_node::InnerNode};
+use crate::{protocol::codecs::websocket::WebsocketCodec, tools::inner_node::InnerNode};
 
 impl Writing for InnerNode {
     type Message = Vec<u8>;

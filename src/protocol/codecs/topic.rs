@@ -1,4 +1,7 @@
-use std::io::{self, ErrorKind};
+use std::{
+    collections::HashSet,
+    io::{self, ErrorKind},
+};
 
 use bytes::{Buf, BytesMut};
 use tokio_util::codec::Decoder;
@@ -12,8 +15,7 @@ use crate::protocol::{
 #[derive(Debug)]
 pub struct MsgOfInterest {
     /// Message tags for which the node is interested (subscribed).
-    // TODO(Rqnsom): convert to a hashset.
-    pub tags: String,
+    pub tags: HashSet<Tag>,
 }
 
 impl MsgOfInterest {
@@ -28,9 +30,13 @@ impl MsgOfInterest {
             return Err(invalid_data!("expected 'tags' topic"));
         }
 
-        Ok(Self {
-            tags: tag_topic.value,
-        })
+        let tags: HashSet<_> = tag_topic
+            .value
+            .split(',')
+            .map(Tag::try_from)
+            .collect::<io::Result<_>>()?;
+
+        Ok(Self { tags })
     }
 }
 
