@@ -5,7 +5,7 @@ use tokio_util::codec::Decoder;
 use tracing::{debug, warn, Span};
 
 use crate::protocol::{
-    codecs::{payload::Payload, tagmsg::TagMsgCodec, websocketcodec::WebsocketCodec},
+    codecs::{payload::Payload, tagmsg::TagMsgCodec, websocket::WebsocketCodec},
     invalid_data,
 };
 

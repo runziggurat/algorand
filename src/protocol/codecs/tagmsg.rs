@@ -12,7 +12,7 @@ use crate::protocol::{
 /// [Tag] represents a message type identifier.
 ///
 /// The original tag list can be found in go-algorand/protocol/tags.go.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Tag {
     UnknownMsg,
     AgreementVote,
@@ -37,6 +37,14 @@ impl TryFrom<Bytes> for Tag {
         let tag = std::str::from_utf8(&tag)
             .map_err(|_| invalid_data!("couldn't convert the tag to a UTF-8 string"))?;
 
+        Self::try_from(tag)
+    }
+}
+
+impl TryFrom<&str> for Tag {
+    type Error = io::Error;
+
+    fn try_from(tag: &str) -> Result<Self, Self::Error> {
         Ok(match tag {
             "??" => Self::UnknownMsg,
             "AV" => Self::AgreementVote,

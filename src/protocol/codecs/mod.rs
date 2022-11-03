@@ -4,4 +4,4 @@ pub mod algomsg;
 pub mod payload;
 mod tagmsg;
 mod topic;
-pub mod websocketcodec;
+pub mod websocket;
