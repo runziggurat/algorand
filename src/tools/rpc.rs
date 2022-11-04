@@ -5,21 +5,16 @@
 //! - [V1](https://developer.algorand.org/docs/rest-apis/algod/v1/) - which is deprecated but still used by the node.
 //! - [V2](https://developer.algorand.org/docs/rest-apis/algod/v2/)
 
-use std::{
-    fmt::{self, Display, Formatter},
-    time::Duration,
-};
+use std::time::Duration;
 
-use data_encoding::{BASE32_NOPAD, BASE64};
-use fmt::Debug;
 use reqwest::{header, Client};
-use serde::{
-    de::{Error, Visitor},
-    Deserialize, Deserializer, Serialize, Serializer,
-};
+use serde::{Deserialize, Serialize};
 use tokio::time::{error::Elapsed, sleep};
 
-use crate::protocol::constants::USER_AGENT;
+use crate::protocol::{
+    codecs::msgpack::{deserialize_byte32_arr_opt, HashDigest},
+    constants::USER_AGENT,
+};
 
 /// Timeout time for RPC requests.
 const RPC_TIMEOUT: Duration = Duration::from_secs(10);
@@ -177,71 +172,4 @@ pub struct BlockHeaderMsgPack {
     /// Root of transaction vector commitment merkle tree using SHA256 hash function.
     #[serde(default, rename = "txn256")]
     pub tx_merke_root_hash256: Option<HashDigest>,
-}
-
-/// A SHA512_256 hash.
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub struct HashDigest(pub [u8; 32]);
-
-impl Display for HashDigest {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", BASE64.encode(&self.0))
-    }
-}
-
-impl Debug for HashDigest {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", BASE32_NOPAD.encode(&self.0))
-    }
-}
-
-impl Serialize for HashDigest {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_bytes(&self.0[..])
-    }
-}
-
-impl<'de> Deserialize<'de> for HashDigest {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Ok(HashDigest(deserializer.deserialize_bytes(VisitorU8_32)?))
-    }
-}
-
-pub struct VisitorU8_32;
-
-impl<'de> Visitor<'de> for VisitorU8_32 {
-    type Value = [u8; 32];
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("expecting a 32 byte array")
-    }
-
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        if v.len() != 32 {
-            return Err(E::custom(format!("Invalid byte array length: {}", v.len())));
-        }
-
-        let mut bytes = [0; 32];
-        bytes.copy_from_slice(v);
-        Ok(bytes)
-    }
-}
-
-pub fn deserialize_byte32_arr_opt<'de, D>(deserializer: D) -> Result<Option<[u8; 32]>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    Ok(match <Option<&[u8]>>::deserialize(deserializer)? {
-        Some(slice) => Some(slice.try_into().map_err(D::Error::custom)?),
-        None => None,
-    })
 }

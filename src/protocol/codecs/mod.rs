@@ -45,6 +45,7 @@
 //
 
 pub mod algomsg;
+pub mod msgpack;
 pub mod payload;
 mod tagmsg;
 mod topic;

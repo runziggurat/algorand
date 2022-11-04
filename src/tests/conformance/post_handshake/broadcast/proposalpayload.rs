@@ -7,8 +7,8 @@ use crate::{
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn c005_MSG_OF_INTEREST_expect_after_connect() {
-    // ZG-CONFORMANCE-005
+async fn c007_PROPOSAL_PAYLOAD_expect_after_connect() {
+    // ZG-CONFORMANCE-007
 
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
@@ -31,13 +31,14 @@ async fn c005_MSG_OF_INTEREST_expect_after_connect() {
         .await
         .expect("unable to connect");
 
-    let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
-    assert!(synthetic_node.expect_message(&check).await);
+    let check = |m: &Payload| matches!(&m, Payload::ProposalPayload(..));
+
+    // Wait for two messages at least.
+    for _ in 0..2 {
+        assert!(synthetic_node.expect_message(&check).await);
+    }
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
     node.stop().expect("unable to stop the node");
 }
-
-// TODO(Rqnsom): c005_t2: when the node initiates the connection, send MSG_OF_INTEREST with all messages enabled
-// TODO(Rqnsom): c006: send MSG_OF_INTEREST with all messages disabled and expect no messages afterwards

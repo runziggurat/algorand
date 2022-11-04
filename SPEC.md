@@ -80,13 +80,13 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 |  Message           | Type              | Coverage | Tests                             |
 |--------------------|-------------------|----------|-----------------------------------|
 | Handshake          | HTTP              | ✅       | `C001`, `C002`, `C003`, `C004`    |
-| AgreementVoteTag   | WS data (Tag: AV) | ❌       |                                   |
+| AgreementVoteTag   | WS data (Tag: AV) | 🚧       |                                   |
 | MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`                            |
 | MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
 | NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
 | PingTag            | WS data (Tag: pi) | ❌       |                                   |
 | PingReplyTag       | WS data (Tag: pj) | ❌       |                                   |
-| ProposalPayloadTag | WS data (Tag: PP) | 🚧       | `C006`                            |
+| ProposalPayloadTag | WS data (Tag: PP) | ✅       | `C007`                            |
 | StateProofSigTag   | WS data (Tag: SP) | ❌       |                                   |
 | UniCatchupReqTag   | WS data (Tag: UC) | ❌       |                                   |
 | UniEnsBlockReqTag  | WS data (Tag: UE) | ❌       |                                   |
@@ -139,3 +139,14 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     <>
     <- MsgOfInterest
+
+### ZG-CONFORMANCE-006
+
+    _Reserved for another MsgOfInterest test_
+
+### ZG-CONFORMANCE-007
+
+    The node broadcasts ProposalPayload messages after the handshake.
+
+    <>
+    <- ProposalPayload

@@ -36,7 +36,7 @@ impl Decoder for AlgoMsgCodec {
             return Ok(None);
         };
 
-        debug!(parent: &self.span, "got a WebSocket message {:?}", ws_msg);
+        debug!(parent: &self.span, "got a WebSocket message: {:?}", ws_msg);
 
         // Only binary messages are expected.
         if ws_msg.opcode() != websocket_codec::Opcode::Binary {
