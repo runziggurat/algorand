@@ -229,6 +229,22 @@ pub struct ProposalPayload {
     pub prior_vote: Option<UnauthenticatedVote>,
 }
 
+/// A vote is an endorsement of a particular proposal in Algorand.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AgreementVote {
+    /// Raw vote.
+    #[serde(rename = "r")]
+    pub raw_vote: RawVote,
+
+    /// Unauthenticated credential.
+    #[serde(rename = "cred")]
+    pub unauthenticated_credential: UnauthenticatedCredential,
+
+    /// Signature.
+    #[serde(rename = "sig")]
+    pub sig: OneTimeSignature,
+}
+
 /// A SHA512_256 hash.
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct HashDigest(pub [u8; 32]);

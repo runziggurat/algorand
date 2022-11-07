@@ -6,7 +6,7 @@ use tracing::Span;
 
 use crate::protocol::{
     codecs::{
-        msgpack::ProposalPayload,
+        msgpack::{AgreementVote, ProposalPayload},
         tagmsg::Tag,
         topic::{MsgOfInterest, TopicCodec},
     },
@@ -18,6 +18,7 @@ use crate::protocol::{
 pub enum Payload {
     MsgOfInterest(MsgOfInterest),
     ProposalPayload(Box<ProposalPayload>),
+    AgreementVote(Box<AgreementVote>),
     NotImplemented,
 }
 
@@ -61,9 +62,13 @@ impl Decoder for PayloadCodec {
             }
             Tag::ProposalPayload => {
                 Payload::ProposalPayload(rmp_serde::from_slice(src).map_err(|_| {
-                    invalid_data!("Couldn't deserialize the ProposalPayload message")
+                    invalid_data!("couldn't deserialize the ProposalPayload message")
                 })?)
             }
+            Tag::AgreementVote => Payload::AgreementVote(
+                rmp_serde::from_slice(src)
+                    .map_err(|_| invalid_data!("couldn't deserialize the AgreementVote message"))?,
+            ),
             _ => return Ok(Some(Payload::NotImplemented)),
         };
 
