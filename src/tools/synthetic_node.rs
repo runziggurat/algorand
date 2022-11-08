@@ -13,6 +13,7 @@ use tokio::{
     sync::mpsc::{self, Receiver},
     time::{sleep, timeout, Duration},
 };
+use tracing::trace;
 
 use crate::{
     protocol::codecs::payload::Payload,
@@ -130,11 +131,33 @@ impl SyntheticNode {
         self.inner.node().shut_down().await
     }
 
+    /// Sends a direct message to the target address.
+    pub fn unicast(&self, target: SocketAddr, message: Payload) -> io::Result<()> {
+        trace!(parent: self.inner.node().span(), "unicast send msg to {target}: {:?}", message);
+        self.inner.unicast(target, message)?;
+        Ok(())
+    }
+
     /// Reads a message from the inbound (internal) queue of the node.
     pub async fn recv_message(&mut self) -> (SocketAddr, Payload) {
         match self.inbound_rx.recv().await {
             Some(message) => message,
             None => panic!("all senders dropped!"),
+        }
+    }
+
+    /// Attempts to read a message from the inbound (internal) queue of the node before the
+    /// timeout duration has elapsed.
+    pub async fn recv_message_timeout(
+        &mut self,
+        duration: Duration,
+    ) -> io::Result<(SocketAddr, Payload)> {
+        match timeout(duration, self.recv_message()).await {
+            Ok(message) => Ok(message),
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("could not read the message after: {:?}", duration),
+            )),
         }
     }
 
