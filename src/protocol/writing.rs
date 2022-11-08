@@ -1,14 +1,17 @@
 use std::net::SocketAddr;
 
-use pea2pea::{protocols::Writing, ConnectionSide};
+use pea2pea::{protocols::Writing, ConnectionSide, Pea2Pea};
 
-use crate::{protocol::codecs::websocket::WebsocketCodec, tools::inner_node::InnerNode};
+use crate::{
+    protocol::codecs::{algomsg::AlgoMsgCodec, payload::Payload},
+    tools::inner_node::InnerNode,
+};
 
 impl Writing for InnerNode {
-    type Message = Vec<u8>;
-    type Codec = WebsocketCodec;
+    type Message = Payload;
+    type Codec = AlgoMsgCodec;
 
     fn codec(&self, _addr: SocketAddr, _side: ConnectionSide) -> Self::Codec {
-        Default::default()
+        AlgoMsgCodec::new(self.node().span().clone())
     }
 }

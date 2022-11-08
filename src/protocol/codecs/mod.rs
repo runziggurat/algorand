@@ -47,6 +47,6 @@
 pub mod algomsg;
 pub mod msgpack;
 pub mod payload;
-mod tagmsg;
-mod topic;
+pub mod tagmsg;
+pub mod topic;
 pub mod websocket;

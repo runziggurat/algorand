@@ -1,8 +1,9 @@
 use std::io::{self, ErrorKind};
 
 use bytes::BytesMut;
-use tokio_util::codec::Decoder;
+use tokio_util::codec::{Decoder, Encoder};
 use tracing::{debug, warn, Span};
+use websocket_codec::Opcode;
 
 use crate::protocol::{
     codecs::{payload::Payload, tagmsg::TagMsgCodec, websocket::WebsocketCodec},
@@ -39,7 +40,7 @@ impl Decoder for AlgoMsgCodec {
         debug!(parent: &self.span, "got a WebSocket message: {:?}", ws_msg);
 
         // Only binary messages are expected.
-        if ws_msg.opcode() != websocket_codec::Opcode::Binary {
+        if ws_msg.opcode() != Opcode::Binary {
             warn!(parent: &self.span, "not a binary opcode");
             return Err(invalid_data!("expected a binary opcode"));
         }
@@ -54,5 +55,21 @@ impl Decoder for AlgoMsgCodec {
             .ok_or_else(|| invalid_data!("missing algod message"))?;
 
         Ok(Some(payload))
+    }
+}
+
+impl Encoder<Payload> for AlgoMsgCodec {
+    type Error = io::Error;
+
+    fn encode(&mut self, message: Payload, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let mut tag_msg = BytesMut::new();
+
+        self.tagmsg
+            .encode(message, &mut tag_msg)
+            .map_err(|_| invalid_data!("couldn't encode a tagmsg message"))?;
+
+        self.websocket
+            .encode(tag_msg.to_vec(), dst)
+            .map_err(|_| invalid_data!("couldn't encode a websocket message"))
     }
 }
