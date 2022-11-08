@@ -30,6 +30,27 @@ pub enum Tag {
     VoteBundle,
 }
 
+impl Tag {
+    pub fn get_tag_str(&self) -> &str {
+        match self {
+            Self::UnknownMsg => "??",
+            Self::AgreementVote => "AV",
+            Self::MsgOfInterest => "MI",
+            Self::MsgDigestSkip => "MS",
+            Self::NetPrioResponse => "NP",
+            Self::Ping => "pi",
+            Self::PingReply => "pj",
+            Self::ProposalPayload => "PP",
+            Self::StateProofSig => "SP",
+            Self::TopicMsgResp => "TS",
+            Self::Txn => "TX",
+            Self::UniCatchupReq => "UC",
+            Self::UniEnsBlockReq => "UE",
+            Self::VoteBundle => "VB",
+        }
+    }
+}
+
 impl TryFrom<Bytes> for Tag {
     type Error = io::Error;
 
