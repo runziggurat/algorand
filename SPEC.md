@@ -135,10 +135,11 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-CONFORMANCE-005
 
-    The node sends MsgOfInterest after the handshake.
+    The node and the synthetic node exchange MsgOfInterest messages after the handshake.
 
     <>
     <- MsgOfInterest
+    -> MsgOfInterest
 
 ### ZG-CONFORMANCE-006
 
