@@ -80,7 +80,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 |  Message           | Type              | Coverage | Tests                             |
 |--------------------|-------------------|----------|-----------------------------------|
 | Handshake          | HTTP              | ✅       | `C001`, `C002`, `C003`, `C004`    |
-| AgreementVoteTag   | WS data (Tag: AV) | 🚧       |                                   |
+| AgreementVoteTag   | WS data (Tag: AV) | ✅       | `C008`                            |
 | MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`                            |
 | MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
 | NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
@@ -150,3 +150,10 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     <>
     <- ProposalPayload
+
+### ZG-CONFORMANCE-008
+
+    The node broadcasts AgreementVote messages after the handshake.
+
+    <>
+    <- AgreementVote
