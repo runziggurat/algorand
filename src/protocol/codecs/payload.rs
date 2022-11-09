@@ -94,7 +94,6 @@ impl Encoder<Payload> for PayloadCodec {
         };
 
         dst.put(raw_data.as_slice());
-
         Ok(())
     }
 }

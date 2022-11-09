@@ -70,6 +70,6 @@ impl Encoder<Payload> for AlgoMsgCodec {
 
         self.websocket
             .encode(tag_msg.to_vec(), dst)
-            .map_err(|_| invalid_data!("couldn't encode a websocket message"))
+            .map_err(|_| invalid_data!("couldn't encode a WebSocket message"))
     }
 }
