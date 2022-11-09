@@ -49,6 +49,7 @@ These results were obtained by running the test suite against [Algorand v3.9.4-s
 | [003](SPEC.md#ZG-CONFORMANCE-003) |   ✓    |                                                                             |
 | [004](SPEC.md#ZG-CONFORMANCE-004) |   ✓    |                                                                             |
 | [005](SPEC.md#ZG-CONFORMANCE-005) |   ✓    |                                                                             |
-| [006](SPEC.md#ZG-CONFORMANCE-006) |   -    |                                                                             |
+| [006](SPEC.md#ZG-CONFORMANCE-006) |   ✓    |                                                                             |
 | [007](SPEC.md#ZG-CONFORMANCE-007) |   ✓    |                                                                             |
 | [008](SPEC.md#ZG-CONFORMANCE-008) |   ✓    |                                                                             |
+| [009](SPEC.md#ZG-CONFORMANCE-009) |   ✖    | The PingReply handler doesn't exist anymore in the go-algorand codebase     |

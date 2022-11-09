@@ -163,3 +163,13 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     <>
     <- AgreementVote
+
+### ZG-CONFORMANCE-009
+
+    The synthetic node sends a Ping request message to the node.
+
+    <>
+    -> Ping (data)
+    <- PingReply (data)
+
+    Assert: The node replies with the PingReply message.

@@ -13,13 +13,23 @@ use crate::protocol::{
     invalid_data,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(clippy::enum_variant_names)]
+#[allow(dead_code)]
 pub enum Payload {
     MsgOfInterest(MsgOfInterest),
     ProposalPayload(Box<ProposalPayload>),
     AgreementVote(Box<AgreementVote>),
+    Ping(PingData),
+    PingReply(PingData),
     NotImplemented,
+}
+
+/// Payload data for the [Ping] and [PingReply] messages.
+#[derive(Debug, Clone)]
+pub struct PingData {
+    /// It usually contains random bytes used for matching Ping-PingReply messages.
+    pub nonce: [u8; 8],
 }
 
 /// [PayloadCodec] decodes the Algod message payload using a provided tag.
@@ -90,6 +100,7 @@ impl Encoder<Payload> for PayloadCodec {
             }
             Payload::ProposalPayload(pp) => rmp_serde::encode::to_vec(&pp)
                 .map_err(|_| invalid_data!("couldn't encode a payload message"))?,
+            Payload::Ping(ping) => ping.nonce.to_vec(),
             _ => unimplemented!(),
         };
 
