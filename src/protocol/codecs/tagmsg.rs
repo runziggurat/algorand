@@ -1,7 +1,7 @@
 use std::io;
 
 use bytes::{Bytes, BytesMut};
-use tokio_util::codec::Decoder;
+use tokio_util::codec::{Decoder, Encoder};
 use tracing::*;
 
 use crate::protocol::{
@@ -86,6 +86,17 @@ impl TryFrom<&str> for Tag {
     }
 }
 
+impl From<&Payload> for Tag {
+    fn from(payload: &Payload) -> Self {
+        match *payload {
+            Payload::MsgOfInterest(_) => Self::MsgOfInterest,
+            Payload::ProposalPayload(_) => Self::ProposalPayload,
+            Payload::AgreementVote(_) => Self::AgreementVote,
+            Payload::NotImplemented => Self::UnknownMsg,
+        }
+    }
+}
+
 /// [TagMsgCodec] is the codec for tagged Algod messages.
 #[derive(Clone)]
 pub struct TagMsgCodec {
@@ -117,5 +128,22 @@ impl Decoder for TagMsgCodec {
 
         self.payload.tag = Some(tag);
         self.payload.decode(src)
+    }
+}
+
+impl Encoder<Payload> for TagMsgCodec {
+    type Error = io::Error;
+
+    fn encode(&mut self, message: Payload, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let tag = Tag::from(&message);
+        dst.extend_from_slice(tag.get_tag_str().as_bytes());
+
+        let mut payload_data = BytesMut::new();
+        self.payload
+            .encode(message, &mut payload_data)
+            .map_err(|_| invalid_data!("couldn't encode a tagmsg message"))?;
+
+        dst.extend_from_slice(&payload_data);
+        Ok(())
     }
 }

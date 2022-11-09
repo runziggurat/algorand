@@ -51,3 +51,4 @@ These results were obtained by running the test suite against [Algorand v3.9.4-s
 | [005](SPEC.md#ZG-CONFORMANCE-005) |   ✓    |                                                                             |
 | [006](SPEC.md#ZG-CONFORMANCE-006) |   -    |                                                                             |
 | [007](SPEC.md#ZG-CONFORMANCE-007) |   ✓    |                                                                             |
+| [008](SPEC.md#ZG-CONFORMANCE-008) |   ✓    |                                                                             |

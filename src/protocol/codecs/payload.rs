@@ -1,7 +1,7 @@
 use std::io;
 
-use bytes::BytesMut;
-use tokio_util::codec::Decoder;
+use bytes::{BufMut, BytesMut};
+use tokio_util::codec::{Decoder, Encoder};
 use tracing::Span;
 
 use crate::protocol::{
@@ -74,5 +74,27 @@ impl Decoder for PayloadCodec {
 
         tracing::debug!(parent: &self.span, "decoded the payload");
         Ok(Some(payload))
+    }
+}
+
+impl Encoder<Payload> for PayloadCodec {
+    type Error = io::Error;
+
+    fn encode(&mut self, message: Payload, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let raw_data = match message {
+            Payload::MsgOfInterest(_) => {
+                return self
+                    .topic
+                    .encode(message, dst)
+                    .map_err(|_| invalid_data!("couldn't encode a payload message"));
+            }
+            Payload::ProposalPayload(pp) => rmp_serde::encode::to_vec(&pp)
+                .map_err(|_| invalid_data!("couldn't encode a payload message"))?,
+            _ => unimplemented!(),
+        };
+
+        dst.put(raw_data.as_slice());
+
+        Ok(())
     }
 }
