@@ -81,7 +81,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 |--------------------|-------------------|----------|-----------------------------------|
 | Handshake          | HTTP              | ✅       | `C001`, `C002`, `C003`, `C004`    |
 | AgreementVoteTag   | WS data (Tag: AV) | ✅       | `C008`                            |
-| MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`                            |
+| MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`, `C006`                    |
 | MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
 | NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
 | PingTag            | WS data (Tag: pi) | ❌       |                                   |
@@ -143,7 +143,12 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-CONFORMANCE-006
 
-    _Reserved for another MsgOfInterest test_
+    The synthetic node sends the MsgOfInterest message with an empty list to indicate it's not interested in any of the nodes' messages.
+    <>
+    <- MsgOfInterest
+    -> MsgOfInterest (empty list)
+
+    Assert: expect the node will stop sending messages to the syntethic node.
 
 ### ZG-CONFORMANCE-007
 

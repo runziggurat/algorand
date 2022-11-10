@@ -45,7 +45,7 @@ impl TryFrom<Vec<Topic>> for MsgOfInterest {
 }
 
 impl MsgOfInterest {
-    /// Convert the message to a corresopnding [Topic].
+    /// Convert the message to a corresponding [Topic].
     #[allow(clippy::wrong_self_convention)]
     fn to_topic(self) -> Topic {
         let value = self
