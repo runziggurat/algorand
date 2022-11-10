@@ -84,8 +84,8 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`, `C006`                    |
 | MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
 | NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
-| PingTag            | WS data (Tag: pi) | ❌       |                                   |
-| PingReplyTag       | WS data (Tag: pj) | ❌       |                                   |
+| PingTag            | WS data (Tag: pi) | ✅       | `C009`                            |
+| PingReplyTag       | WS data (Tag: pj) | ✅       | `C009`                            |
 | ProposalPayloadTag | WS data (Tag: PP) | ✅       | `C007`                            |
 | StateProofSigTag   | WS data (Tag: SP) | ❌       |                                   |
 | UniCatchupReqTag   | WS data (Tag: UC) | ❌       |                                   |
@@ -173,3 +173,7 @@ _TODO: Investigate more REST API calls and possibly include above._
     <- PingReply (data)
 
     Assert: The node replies with the PingReply message.
+
+    or alternatively:
+
+    Assert: Perform the handshake and then idly wait for a Ping message request.
