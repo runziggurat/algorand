@@ -92,6 +92,8 @@ impl From<&Payload> for Tag {
             Payload::MsgOfInterest(_) => Self::MsgOfInterest,
             Payload::ProposalPayload(_) => Self::ProposalPayload,
             Payload::AgreementVote(_) => Self::AgreementVote,
+            Payload::Ping(_) => Self::Ping,
+            Payload::PingReply(_) => Self::PingReply,
             Payload::NotImplemented => Self::UnknownMsg,
         }
     }

@@ -15,7 +15,7 @@ use crate::protocol::{
 const TOPIC_KEY_TAGS: &str = "tags";
 
 /// [MsgOfInterest] contains a tag list in which the node is interested.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MsgOfInterest {
     /// Message tags for which the node is interested (subscribed).
     pub tags: HashSet<Tag>,
