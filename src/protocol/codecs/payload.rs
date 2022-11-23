@@ -8,7 +8,7 @@ use crate::protocol::{
     codecs::{
         msgpack::{AgreementVote, ProposalPayload},
         tagmsg::Tag,
-        topic::{MsgOfInterest, TopicCodec},
+        topic::{MsgOfInterest, TopicCodec, TopicMsgResp, UniEnsBlockReq},
     },
     invalid_data,
 };
@@ -22,6 +22,8 @@ pub enum Payload {
     AgreementVote(Box<AgreementVote>),
     Ping(PingData),
     PingReply(PingData),
+    UniEnsBlockReq(UniEnsBlockReq),
+    TopicMsgResp(TopicMsgResp),
     NotImplemented,
 }
 
@@ -64,7 +66,7 @@ impl Decoder for PayloadCodec {
         let tag = self.tag.expect("tag not set");
 
         let payload = match tag {
-            Tag::MsgOfInterest => {
+            Tag::MsgOfInterest | Tag::TopicMsgResp => {
                 self.topic.tag = Some(tag);
                 self.topic
                     .decode(src)?
@@ -92,7 +94,7 @@ impl Encoder<Payload> for PayloadCodec {
 
     fn encode(&mut self, message: Payload, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let raw_data = match message {
-            Payload::MsgOfInterest(_) => {
+            Payload::MsgOfInterest(_) | Payload::UniEnsBlockReq(_) => {
                 return self
                     .topic
                     .encode(message, dst)

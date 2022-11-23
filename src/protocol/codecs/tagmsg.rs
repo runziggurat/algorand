@@ -94,6 +94,8 @@ impl From<&Payload> for Tag {
             Payload::AgreementVote(_) => Self::AgreementVote,
             Payload::Ping(_) => Self::Ping,
             Payload::PingReply(_) => Self::PingReply,
+            Payload::UniEnsBlockReq(_) => Self::UniEnsBlockReq,
+            Payload::TopicMsgResp(_) => Self::TopicMsgResp,
             Payload::NotImplemented => Self::UnknownMsg,
         }
     }
