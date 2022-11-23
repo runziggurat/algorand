@@ -77,22 +77,23 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 ## Network protocol test coverage
 
-|  Message           | Type              | Coverage | Tests                             |
-|--------------------|-------------------|----------|-----------------------------------|
-| Handshake          | HTTP              | ✅       | `C001`, `C002`, `C003`, `C004`    |
-| AgreementVoteTag   | WS data (Tag: AV) | ✅       | `C008`                            |
-| MsgOfInterestTag   | WS data (Tag: MI) | ✅       | `C005`, `C006`                    |
-| MsgDigestSkipTag   | WS data (Tag: MS) | ❌       |                                   |
-| NetPrioResponseTag | WS data (Tag: NP) | ❌       |                                   |
-| PingTag            | WS data (Tag: pi) | ✅       | `C009`                            |
-| PingReplyTag       | WS data (Tag: pj) | ✅       | `C009`                            |
-| ProposalPayloadTag | WS data (Tag: PP) | ✅       | `C007`                            |
-| StateProofSigTag   | WS data (Tag: SP) | ❌       |                                   |
-| UniCatchupReqTag   | WS data (Tag: UC) | ❌       |                                   |
-| UniEnsBlockReqTag  | WS data (Tag: UE) | ❌       |                                   |
-| TopicMsgRespTag    | WS data (Tag: TS) | ❌       |                                   |
-| TxnTag             | WS data (Tag: TX) | ❌       |                                   |
-| VoteBundleTag      | WS data (Tag: VB) | ❌       |                                   |
+|  Message                   | Type                  | Coverage | Tests                             |
+|----------------------------|-----------------------|----------|-----------------------------------|
+| /v1/{network-name}/gossip  | HTTP (handshake)      | ✅       | `C001`, `C002`, `C003`            |
+| /v1/block/{round}          | HTTP (get block)      | ✅       | `C004`                            |
+| AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`                            |
+| MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`                    |
+| MsgDigestSkipTag           | WS data (Tag: MS)     | ❌       |                                   |
+| NetPrioResponseTag         | WS data (Tag: NP)     | ❌       |                                   |
+| PingTag                    | WS data (Tag: pi)     | ✅       | `C009`                            |
+| PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
+| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`                            |
+| StateProofSigTag           | WS data (Tag: SP)     | ❌       |                                   |
+| UniCatchupReqTag           | WS data (Tag: UC)     | ❌       |                                   |
+| UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`                            |
+| TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`                            |
+| TxnTag                     | WS data (Tag: TX)     | ❌       |                                   |
+| VoteBundleTag              | WS data (Tag: VB)     | ❌       |                                   |
 
 _TODO: Investigate more REST API calls and possibly include above._
 
@@ -177,3 +178,13 @@ _TODO: Investigate more REST API calls and possibly include above._
     or alternatively:
 
     Assert: Perform the handshake and then idly wait for a Ping message request.
+
+### ZG-CONFORMANCE-010
+
+    The node responds correctly to a block request message for the UniEnsBlockReq message request.
+
+    <>
+    -> UniEnsBlockReq
+    <- TopicMsgResp
+
+    Assert: the response contains block for a requested round.
