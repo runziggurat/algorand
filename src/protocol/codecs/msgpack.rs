@@ -22,7 +22,7 @@ use serde::{
 type Period = u64;
 
 // Algorand is organized in logical units (r = 0, 1...) called rounds in which new blocks are created.
-type Round = u64;
+pub type Round = u64;
 
 // Each [Round] is divided into multiple steps.
 type Step = u64;

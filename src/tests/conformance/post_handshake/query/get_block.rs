@@ -1,6 +1,10 @@
 use tempfile::TempDir;
 
 use crate::{
+    protocol::codecs::{
+        payload::Payload,
+        topic::{TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
+    },
     setup::node::Node,
     tools::{rpc, synthetic_node::SyntheticNodeBuilder},
 };
@@ -56,6 +60,59 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
                 "previous block hash not found"
             );
         }
+    }
+
+    // Gracefully shut down the nodes.
+    synthetic_node.shut_down().await;
+    node.stop().expect("unable to stop the node");
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn c010_UNI_ENS_BLOCK_REQ_get_block() {
+    // ZG-CONFORMANCE-010
+
+    crate::tools::synthetic_node::enable_tracing();
+    // Spin up a node instance.
+    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let mut node = Node::builder()
+        .log_to_stdout(true)
+        .build(target.path())
+        .expect("unable to build the node");
+    node.start().await;
+
+    // Create a synthetic node and enable handshaking.
+    let mut synthetic_node = SyntheticNodeBuilder::default()
+        .build()
+        .await
+        .expect("unable to build a synthetic node");
+
+    let net_addr = node.net_addr().expect("network address not found");
+
+    // Connect to the node and initiate the handshake.
+    synthetic_node
+        .connect(net_addr)
+        .await
+        .expect("unable to connect");
+
+    // TODO: run the node in setup_env.sh for at least 5 seconds longer to have a few more rounds ready.
+    for round in 0..4 {
+        let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: round,
+            nonce: round,
+        });
+        assert!(synthetic_node.unicast(net_addr, message).is_ok());
+
+        // Expect a UniEnsBlockRsp response with a block with the same round.
+        let check = |m: &Payload| {
+            matches!(&m, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
+                     if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round)
+        };
+        assert!(
+            synthetic_node.expect_message(&check).await,
+            "the UniEnsBlockRsp response is missing"
+        );
     }
 
     // Gracefully shut down the nodes.
