@@ -32,8 +32,7 @@ pub struct MsgOfInterest {
 }
 
 /// Universal block request types.
-#[derive(Debug, Clone)]
-#[allow(dead_code)] // TODO: write a test for unused ones.
+#[derive(Debug, Copy, Clone)]
 pub enum UniEnsBlockReqType {
     /// Block-data topic-key in the response.
     Block,
