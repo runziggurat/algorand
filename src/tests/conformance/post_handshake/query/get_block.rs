@@ -69,7 +69,7 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn c010_UNI_ENS_BLOCK_REQ_get_block() {
+async fn c010_t1_UNI_ENS_BLOCK_REQ_get_block_and_cert() {
     // ZG-CONFORMANCE-010
 
     // Spin up a node instance.
@@ -101,10 +101,124 @@ async fn c010_UNI_ENS_BLOCK_REQ_get_block() {
         });
         assert!(synthetic_node.unicast(net_addr, message).is_ok());
 
-        // Expect a UniEnsBlockRsp response with a block with the same round.
+        // Expect a UniEnsBlockRsp response with a block with the same round and also a certificate.
         let check = |m: &Payload| {
             matches!(&m, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
-                     if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round)
+                     if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round && rsp.cert.is_some())
+        };
+        assert!(
+            synthetic_node.expect_message(&check).await,
+            "the UniEnsBlockRsp response is missing"
+        );
+    }
+
+    // Gracefully shut down the nodes.
+    synthetic_node.shut_down().await;
+    node.stop().expect("unable to stop the node");
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn c010_t2_UNI_ENS_BLOCK_REQ_get_block_only() {
+    // ZG-CONFORMANCE-010
+
+    // Spin up a node instance.
+    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let mut node = Node::builder()
+        .build(target.path())
+        .expect("unable to build the node");
+    node.start().await;
+
+    // Create a synthetic node and enable handshaking.
+    let mut synthetic_node = SyntheticNodeBuilder::default()
+        .build()
+        .await
+        .expect("unable to build a synthetic node");
+
+    let net_addr = node.net_addr().expect("network address not found");
+
+    // Connect to the node and initiate the handshake.
+    synthetic_node
+        .connect(net_addr)
+        .await
+        .expect("unable to connect");
+
+    for round in 0..4 {
+        let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::Block,
+            round_key: round,
+            nonce: round,
+        });
+        assert!(synthetic_node.unicast(net_addr, message).is_ok());
+
+        // TODO: Still unsupported, check with the Algorand team.
+        //// Expect a UniEnsBlockRsp response with only a block with the same round, no certificate.
+        //let check = |m: &Payload| {
+        //    matches!(&m, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
+        //             if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round && rsp.cert.is_none())
+        //};
+
+        // Alternative check to ensure it's unsupported :-)
+        let check = |m: &Payload| {
+            matches!(&m, Payload::TopicMsgResp(TopicMsgResp::ErrorRsp(rsp))
+                     if rsp.error.as_str() == "requested data type is unsupported")
+        };
+        assert!(
+            synthetic_node.expect_message(&check).await,
+            "the UniEnsBlockRsp response is missing"
+        );
+    }
+
+    // Gracefully shut down the nodes.
+    synthetic_node.shut_down().await;
+    node.stop().expect("unable to stop the node");
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
+    // ZG-CONFORMANCE-010
+
+    // Spin up a node instance.
+    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let mut node = Node::builder()
+        .build(target.path())
+        .expect("unable to build the node");
+    node.start().await;
+
+    // Create a synthetic node and enable handshaking.
+    let mut synthetic_node = SyntheticNodeBuilder::default()
+        .build()
+        .await
+        .expect("unable to build a synthetic node");
+
+    let net_addr = node.net_addr().expect("network address not found");
+
+    // Connect to the node and initiate the handshake.
+    synthetic_node
+        .connect(net_addr)
+        .await
+        .expect("unable to connect");
+
+    for round in 0..4 {
+        let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::Cert,
+            round_key: round,
+            nonce: round,
+        });
+        assert!(synthetic_node.unicast(net_addr, message).is_ok());
+
+        // TODO: Still unsupported, check with the Algorand team.
+        //// Expect a UniEnsBlockRsp response with only a certificate, no block.
+        //let check = |m: &Payload| {
+        //    matches!(&m, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
+        //             if rsp.block.is_none() && rsp.cert.is_some())
+        //};
+
+        // Alternative check to ensure it's unsupported :-)
+        let check = |m: &Payload| {
+            matches!(&m, Payload::TopicMsgResp(TopicMsgResp::ErrorRsp(rsp))
+                     if rsp.error.as_str() == "requested data type is unsupported")
         };
         assert!(
             synthetic_node.expect_message(&check).await,
