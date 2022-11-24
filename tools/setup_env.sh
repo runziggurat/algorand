@@ -64,6 +64,9 @@ update_config_file() {
 
     # The default (unspecified) base log level is 4 (info). Use the most verbose log level 5 (debug / verbose) instead.
     echo "$(awk 'NR==3{print "\t\"BaseLoggerDebugLevel\": 5,"}1' $CFG_FILE)" > $CFG_FILE # see [3]
+
+    # The default value is 30. The other workaround is using different 127.0.x.x addresses, but this is easier.
+    echo "$(awk 'NR==3{print "\t\"MaxConnectionsPerIP\": 900,"}1' $CFG_FILE)" > $CFG_FILE # see [3]
 }
 
 # Verify the algod binary path using the version option
