@@ -2,12 +2,12 @@
 # This script sets up the environment for the Ziggurat test suite.
 #
 # The private network setup is explained here:
-# [1] https://developer.algorand.org/docs/clis/goal/network/create/
+# [1] https://developer.algorand.org/docs/clis/goal/network/network/
 #
 # Telemetry config settings are explained here:
 # [2] https://developer.algorand.org/docs/run-a-node/reference/telemetry-config/
 #
-# BaseLoggerDebugLevel is explained here:
+# Configuration options are explained here:
 # [3] https://developer.algorand.org/docs/run-a-node/reference/config/
 
 set -e
@@ -45,6 +45,21 @@ setup_config_file() {
 setup_private_network() {
     echo "--- Setting up private network files at the location $ZIGGURAT_ALGORAND_PN_DIR"
     $GOAL_CMD network create -r $ZIGGURAT_ALGORAND_PN_DIR -n private -t tools/ziggurat_network_template.json # see [1]
+    echo
+
+    # Run for at least 20 seconds to ensure the network generates four rounds
+    # (certain tests expect at least four rounds to be instantly available)
+    PN_RUNNING_TIME_SEC=20
+
+    echo "--- Spinning up the private network for $PN_RUNNING_TIME_SEC seconds"
+    $GOAL_CMD network start -r $ZIGGURAT_ALGORAND_PN_DIR # see [1]
+    echo
+    sleep $PN_RUNNING_TIME_SEC
+    echo "--- Check the network status before stopping the network"
+    $GOAL_CMD network status -r $ZIGGURAT_ALGORAND_PN_DIR # see [1]
+    echo
+    echo "--- Stopping the network"
+    $GOAL_CMD network stop -r $ZIGGURAT_ALGORAND_PN_DIR # see [1]
     echo
 
     # Copy telemetry config file manually to ensure nodes don't look for the global config file at ~/.algorand/
@@ -92,6 +107,7 @@ if [ "`basename $REPO_ROOT`" != "algorand" ]; then
 fi
 
 # Setup the main ziggurat directory in the home directory
+rm -rf $ZIGGURAT_ALGORAND_DIR # Ensure a fresh start.
 mkdir -p $ZIGGURAT_ALGORAND_DIR
 
 # Change dir to ensure script paths are always correct
