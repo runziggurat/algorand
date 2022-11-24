@@ -37,7 +37,7 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
 
     let rpc_addr = net_addr.to_string();
 
-    for round in [0, 1] {
+    for round in 0..4 {
         let block_cert = rpc::wait_for_block(&rpc_addr, round)
             .await
             .expect("couldn't get a block");
@@ -72,11 +72,9 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
 async fn c010_UNI_ENS_BLOCK_REQ_get_block() {
     // ZG-CONFORMANCE-010
 
-    crate::tools::synthetic_node::enable_tracing();
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
     let mut node = Node::builder()
-        .log_to_stdout(true)
         .build(target.path())
         .expect("unable to build the node");
     node.start().await;
@@ -95,7 +93,6 @@ async fn c010_UNI_ENS_BLOCK_REQ_get_block() {
         .await
         .expect("unable to connect");
 
-    // TODO: run the node in setup_env.sh for at least 5 seconds longer to have a few more rounds ready.
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
             data_type: UniEnsBlockReqType::BlockAndCert,
