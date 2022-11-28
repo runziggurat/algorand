@@ -8,7 +8,7 @@ use crate::protocol::{
     codecs::{
         msgpack::{AgreementVote, ProposalPayload},
         tagmsg::Tag,
-        topic::{MsgOfInterest, TopicCodec, TopicMsgResp, UniEnsBlockReq},
+        topic::{MsgOfInterest, TopicCodec, TopicMsgResp, UniCatchupReq, UniEnsBlockReq},
     },
     invalid_data,
 };
@@ -23,6 +23,7 @@ pub enum Payload {
     Ping(PingData),
     PingReply(PingData),
     UniEnsBlockReq(UniEnsBlockReq),
+    UniCatchupReq(UniCatchupReq),
     TopicMsgResp(TopicMsgResp),
     NotImplemented,
 }
@@ -94,7 +95,7 @@ impl Encoder<Payload> for PayloadCodec {
 
     fn encode(&mut self, message: Payload, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let raw_data = match message {
-            Payload::MsgOfInterest(_) | Payload::UniEnsBlockReq(_) => {
+            Payload::MsgOfInterest(_) | Payload::UniEnsBlockReq(_) | Payload::UniCatchupReq(_) => {
                 return self
                     .topic
                     .encode(message, dst)

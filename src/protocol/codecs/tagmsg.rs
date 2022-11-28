@@ -95,6 +95,7 @@ impl From<&Payload> for Tag {
             Payload::Ping(_) => Self::Ping,
             Payload::PingReply(_) => Self::PingReply,
             Payload::UniEnsBlockReq(_) => Self::UniEnsBlockReq,
+            Payload::UniCatchupReq(_) => Self::UniCatchupReq,
             Payload::TopicMsgResp(_) => Self::TopicMsgResp,
             Payload::NotImplemented => Self::UnknownMsg,
         }
