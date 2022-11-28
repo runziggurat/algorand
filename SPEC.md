@@ -89,7 +89,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
 | ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`                            |
 | StateProofSigTag           | WS data (Tag: SP)     | ❌       |                                   |
-| UniCatchupReqTag           | WS data (Tag: UC)     | ❌       |                                   |
+| UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`                            |
 | UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`                            |
 | TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`                            |
 | TxnTag                     | WS data (Tag: TX)     | ❌       |                                   |
@@ -181,10 +181,11 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-CONFORMANCE-010
 
-    The node responds correctly to a block request message for the UniEnsBlockReq message request.
+    The node responds correctly to a block request message for the UniEnsBlockReq/UniCatchupReq message request.
 
     <>
-    -> UniEnsBlockReq
+    -> UniEnsBlockReq / UniCatchupReq
     <- TopicMsgResp
 
     Assert: the response contains block for a requested round.
+
