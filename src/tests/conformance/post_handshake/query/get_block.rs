@@ -230,3 +230,50 @@ async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
     synthetic_node.shut_down().await;
     node.stop().expect("unable to stop the node");
 }
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn c010_t4_UNI_ENS_BLOCK_REQ_cannot_get_non_existent_block() {
+    // ZG-CONFORMANCE-010
+
+    // Spin up a node instance.
+    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let mut node = Node::builder()
+        .build(target.path())
+        .expect("unable to build the node");
+    node.start().await;
+
+    // Create a synthetic node and enable handshaking.
+    let mut synthetic_node = SyntheticNodeBuilder::default()
+        .build()
+        .await
+        .expect("unable to build a synthetic node");
+
+    let net_addr = node.net_addr().expect("network address not found");
+
+    // Connect to the node and initiate the handshake.
+    synthetic_node
+        .connect(net_addr)
+        .await
+        .expect("unable to connect");
+
+    let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
+        data_type: UniEnsBlockReqType::BlockAndCert,
+        round_key: 9999,
+        nonce: 0,
+    });
+    assert!(synthetic_node.unicast(net_addr, message).is_ok());
+
+    let check = |m: &Payload| {
+        matches!(&m, Payload::TopicMsgResp(TopicMsgResp::ErrorRsp(rsp))
+                 if rsp.error.as_str() == "requested block is not available")
+    };
+    assert!(
+        synthetic_node.expect_message(&check).await,
+        "the UniEnsBlockRsp response is missing"
+    );
+
+    // Gracefully shut down the nodes.
+    synthetic_node.shut_down().await;
+    node.stop().expect("unable to stop the node");
+}
