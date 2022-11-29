@@ -53,6 +53,17 @@ pub struct UniEnsBlockReq {
     pub nonce: u64,
 }
 
+/// Universal catchup request message - to be phased out by UniEnsBlockReq.
+#[derive(Debug, Clone)]
+pub struct UniCatchupReq {
+    /// Request option.
+    pub data_type: UniEnsBlockReqType,
+    /// Round in which block was created.
+    pub round_key: Round,
+    /// Nonce for a unique request identification.
+    pub nonce: u64,
+}
+
 /// [TopicMsgResp] contains all possible responses which are received in the form of topics.
 #[derive(Debug, Clone)]
 pub enum TopicMsgResp {
@@ -209,6 +220,31 @@ impl From<UniEnsBlockReq> for Vec<Topic> {
     }
 }
 
+impl From<UniCatchupReq> for Vec<Topic> {
+    fn from(msg: UniCatchupReq) -> Self {
+        let u64_to_bytes = |num| {
+            let mut value = BytesMut::new();
+            value.put_u64_le(num);
+            value.freeze()
+        };
+
+        let round_key_topic = Topic {
+            key: TOPIC_KEY_ROUND.into(),
+            value: u64_to_bytes(msg.round_key),
+        };
+        let data_type_topic = Topic {
+            key: TOPIC_KEY_DATA_TYPE.into(),
+            value: Bytes::from(msg.data_type.get_string()),
+        };
+        let nonce_topic = Topic {
+            key: TOPIC_KEY_NONCE.into(),
+            value: u64_to_bytes(msg.nonce),
+        };
+
+        vec![round_key_topic, data_type_topic, nonce_topic]
+    }
+}
+
 impl From<MsgOfInterest> for Vec<Topic> {
     fn from(msg: MsgOfInterest) -> Self {
         let value = msg
@@ -327,6 +363,7 @@ impl Encoder<Payload> for TopicCodec {
         let topics: Vec<Topic> = match message {
             Payload::MsgOfInterest(msg) => msg.into(),
             Payload::UniEnsBlockReq(msg) => msg.into(),
+            Payload::UniCatchupReq(msg) => msg.into(),
             _ => panic!("a topic encoder can only encode topic messages"),
         };
 
