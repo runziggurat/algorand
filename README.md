@@ -32,7 +32,7 @@ environment variable and rerun the setup script:
 
 Short overview of test cases and their current status. In case of failure, the behaviour observed is usually documented in the test case.
 
-These results were obtained by running the test suite against [Algorand v3.9.4-stable](https://github.com/algorand/go-algorand/releases/tag/v3.9.4-stable) (921e8f6f).
+These results were obtained by running the test suite against [Algorand v3.12.2-stable](https://github.com/algorand/go-algorand/releases/tag/v3.12.2-stable) (181490e3).
 
 | Legend |               |
 | :----: | ------------- |

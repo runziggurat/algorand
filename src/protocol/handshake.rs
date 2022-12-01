@@ -55,7 +55,9 @@ impl Handshake for InnerNode {
                 let sec_ws = SecWebSocket::generate();
 
                 let mut req = Vec::new();
-                req.extend_from_slice(b"GET /v1/private-v1/gossip HTTP/1.1\r\n");
+                req.extend_from_slice(
+                    format!("GET /v1/{}/gossip HTTP/1.1\r\n", X_AG_ALGORAND_GENESIS).as_bytes(),
+                );
                 req.extend_from_slice(format!("Host: {}\r\n", conn_addr).as_bytes());
                 req.extend_from_slice(format!("User-Agent: {}\r\n", USER_AGENT).as_bytes());
                 req.extend_from_slice(b"Connection: Upgrade\r\n");
