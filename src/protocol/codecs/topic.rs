@@ -329,12 +329,54 @@ impl TopicCodec {
             raw_data.put_u8(topic.key.len() as u8);
             raw_data.put(topic.key.as_bytes());
 
-            // For messages so far, the max data size fits into the u8 integer.
-            raw_data.put_u8(topic.value.len() as u8);
+            TopicCodec::put_varint(&mut raw_data, topic.value.len());
             raw_data.put(topic.value);
         }
 
         raw_data
+    }
+
+    // The varint functions encode and decode single integer values using a variable-length encoding;
+    // smaller values require fewer bytes. For a specification,
+    // see https://developers.google.com/protocol-buffers/docs/encoding.
+    /// Write a variable-length integer value to the byte stream.
+    #[rustfmt::skip]
+    fn put_varint(raw_data: &mut BytesMut, len: usize) {
+        if len < ((u8::MAX as usize) >> 1) {
+            raw_data.put_u8(len as u8);
+            return;
+        }
+
+        // TODO(Rqnsom): prepare a more generic approach for varint (maybe create a crate)
+        // or even maybe use existing `unsigned-varint` crate here
+        if len < ((u16::MAX as usize) >> 2) {
+            let len = len as u16;
+
+            //  byte  =  current byte       | previous byte leftovers | continuation bit
+            let byte1 = (len & 0x7f)                                  | 0x80;
+            let byte2 = (len & 0x5f00) << 1 | ((len & 0x80) << 1);
+            // The first two columns could be combined, but it's more readable this way.
+
+            let len = byte1 | byte2;
+            raw_data.put_u16_le(len);
+            return;
+        }
+
+        if len < ((u32::MAX as usize) >> 4) {
+            let len = len as u32;
+
+            //  byte  =  current byte           | previous byte leftovers | continuation bit
+            let byte1 = (len & 0x7f)                                      | 0x80;
+            let byte2 = (len & 0x5f00) << 1     | (len & 0x80) << 1       | 0x8000;
+            let byte3 = (len & 0x1f0000) << 2   | (len & 0xc000) << 2     | 0x800000;
+            let byte4 = (len & 0x0f000000) << 3 | (len & 0xe00000) << 3;
+
+            let len = byte1 | byte2 | byte3 | byte4;
+            raw_data.put_u32_le(len);
+            return;
+        }
+
+        unimplemented!("algod can't handle massive data lengths");
     }
 }
 
