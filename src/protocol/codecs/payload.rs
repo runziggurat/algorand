@@ -6,7 +6,7 @@ use tracing::Span;
 
 use crate::protocol::{
     codecs::{
-        msgpack::{AgreementVote, ProposalPayload},
+        msgpack::{AgreementVote, NetPrioResponse, ProposalPayload},
         tagmsg::Tag,
         topic::{MsgOfInterest, TopicCodec, TopicMsgResp, UniCatchupReq, UniEnsBlockReq},
     },
@@ -25,6 +25,7 @@ pub enum Payload {
     UniEnsBlockReq(UniEnsBlockReq),
     UniCatchupReq(UniCatchupReq),
     TopicMsgResp(TopicMsgResp),
+    NetPrioResponse(NetPrioResponse),
     NotImplemented,
 }
 
@@ -82,6 +83,11 @@ impl Decoder for PayloadCodec {
                 rmp_serde::from_slice(src)
                     .map_err(|_| invalid_data!("couldn't deserialize the AgreementVote message"))?,
             ),
+            Tag::NetPrioResponse => {
+                Payload::NetPrioResponse(rmp_serde::from_slice(src).map_err(|_| {
+                    invalid_data!("couldn't deserialize the NetPrioResponse message")
+                })?)
+            }
             _ => return Ok(Some(Payload::NotImplemented)),
         };
 
