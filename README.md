@@ -54,3 +54,6 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 | [008](SPEC.md#ZG-CONFORMANCE-008) |   ✓    |                                                                             |
 | [009](SPEC.md#ZG-CONFORMANCE-009) |   ✖    | The PingReply handler doesn't exist anymore in the go-algorand codebase     |
 | [010](SPEC.md#ZG-CONFORMANCE-010) |  ✓/✖   | Only BlockAndCert request is supported, other type requests are unsupported |
+| [011](SPEC.md#ZG-CONFORMANCE-011) |   ✓    |                                                                             |
+| [012](SPEC.md#ZG-CONFORMANCE-012) |   -    |                                                                             |
+| [013](SPEC.md#ZG-CONFORMANCE-013) |   -    |                                                                             |

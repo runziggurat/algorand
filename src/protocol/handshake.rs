@@ -152,6 +152,11 @@ impl Handshake for InnerNode {
                 rsp.extend_from_slice(
                     format!("X-Algorand-Genesis: {}\r\n", X_AG_ALGORAND_GENESIS).as_bytes(),
                 );
+                if let Some(challenge) = &self.challenge {
+                    rsp.extend_from_slice(
+                        format!("X-Algorand-Prioritychallenge: {challenge}\r\n").as_bytes(),
+                    );
+                }
                 rsp.extend_from_slice(b"\r\n");
                 let rsp = Bytes::from(rsp);
 

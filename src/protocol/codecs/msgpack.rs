@@ -42,6 +42,33 @@ type Ed25519PublicKey = [u8; 32];
 type Ed25519PrivateKey = [u8; 64];
 type Ed25519Seed = [u8; 32];
 
+/// A [NetPrioResponse] contains an answer to the challenge provided within handshake accept
+/// message from the server.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NetPrioResponse {
+    /// Response.
+    #[serde(rename = "Response")]
+    pub response: Response,
+
+    /// Round represents a protocol round index.
+    #[serde(rename = "Round")]
+    round: Round,
+
+    /// Sender address.
+    #[serde(rename = "Sender")]
+    sender_addr: HashDigest,
+
+    /// Signature.
+    #[serde(rename = "Sig")]
+    sig: OneTimeSignature,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Response {
+    #[serde(rename = "Nonce")]
+    pub nonce: String,
+}
+
 /// A [ProposalValue] is a triplet of a block hashes (the contents themselves and the encoding of the block),
 /// its proposer, and the period in which it was proposed.
 #[derive(Debug, Serialize, Deserialize, Clone)]

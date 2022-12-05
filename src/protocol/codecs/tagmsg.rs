@@ -97,6 +97,7 @@ impl From<&Payload> for Tag {
             Payload::UniEnsBlockReq(_) => Self::UniEnsBlockReq,
             Payload::UniCatchupReq(_) => Self::UniCatchupReq,
             Payload::TopicMsgResp(_) => Self::TopicMsgResp,
+            Payload::NetPrioResponse(_) => Self::NetPrioResponse,
             Payload::NotImplemented => Self::UnknownMsg,
         }
     }

@@ -6,7 +6,7 @@ use std::{
 };
 
 use pea2pea::{
-    protocols::{Reading, Writing},
+    protocols::{Handshake, Reading, Writing},
     Config as NodeConfig, Node, Pea2Pea,
 };
 use tokio::{
@@ -37,6 +37,8 @@ pub struct SyntheticNodeBuilder {
     network_config: NodeConfig,
     /// Whether or not to call `enable_handshake` when creating a new node.
     handshake: bool,
+    /// Network priority challenge sent to clients which try to connect to the node.
+    challenge: Option<String>,
 }
 
 impl Default for SyntheticNodeBuilder {
@@ -47,6 +49,7 @@ impl Default for SyntheticNodeBuilder {
                 ..Default::default()
             },
             handshake: true,
+            challenge: None,
         }
     }
 }
@@ -60,8 +63,12 @@ impl SyntheticNodeBuilder {
         // Inbound channel size of 100 messages.
         let (tx, rx) = mpsc::channel(100);
 
-        let inner_node = InnerNode::new(node, tx, self.handshake).await;
+        let inner_node = InnerNode::new(node, tx, self.challenge.clone()).await;
 
+        // Enable the handshake protocol.
+        if self.handshake {
+            inner_node.enable_handshake().await;
+        }
         // Enable the read and write protocols.
         inner_node.enable_reading().await;
         inner_node.enable_writing().await;
@@ -75,6 +82,12 @@ impl SyntheticNodeBuilder {
     /// Choose whether or not the node should perform the handshake procedure.
     pub fn with_handshake(mut self, handshake: bool) -> Self {
         self.handshake = handshake;
+        self
+    }
+
+    /// Choose whether or not the node should include priority challenge inside the accepted handshake responses.
+    pub fn with_priority_challenge(mut self, challenge: String) -> Self {
+        self.challenge = Some(challenge);
         self
     }
 }
