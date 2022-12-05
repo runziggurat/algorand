@@ -98,6 +98,7 @@ impl From<&Payload> for Tag {
             Payload::UniCatchupReq(_) => Self::UniCatchupReq,
             Payload::TopicMsgResp(_) => Self::TopicMsgResp,
             Payload::NetPrioResponse(_) => Self::NetPrioResponse,
+            Payload::MsgDigestSkip(_) => Self::MsgDigestSkip,
             Payload::NotImplemented => Self::UnknownMsg,
         }
     }
