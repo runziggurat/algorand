@@ -84,7 +84,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`                            |
 | MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`                    |
 | MsgDigestSkipTag           | WS data (Tag: MS)     | ❌       |                                   |
-| NetPrioResponseTag         | WS data (Tag: NP)     | ❌       |                                   |
+| NetPrioResponseTag         | WS data (Tag: NP)     | ✅       | `C011`                            |
 | PingTag                    | WS data (Tag: pi)     | ✅       | `C009`                            |
 | PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
 | ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`                            |
@@ -188,4 +188,29 @@ _TODO: Investigate more REST API calls and possibly include above._
     <- TopicMsgResp
 
     Assert: the response contains block for a requested round.
+
+### ZG-CONFORMANCE-011
+
+    The node sends a handshake request to which a synthetic node replies with a handshake response containing a
+    network priority challenge. A synthetic node then expects to receive an answer to that challenge within
+    the NetPrioResponse message.
+
+    <-
+    <- http handshake request
+    -> http handshake response (priority challenge)
+    <- NetPrioResponse
+
+    Assert: the node answers the challenge and replies with the NetPrioResponse message.
+
+### ZG-CONFORMANCE-012
+
+    Reserved
+
+### ZG-CONFORMANCE-013
+
+    Reserved
+
+### ZG-CONFORMANCE-014
+
+    Reserved
 
