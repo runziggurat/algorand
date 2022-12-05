@@ -6,7 +6,7 @@ use tracing::Span;
 
 use crate::protocol::{
     codecs::{
-        msgpack::{AgreementVote, NetPrioResponse, ProposalPayload},
+        msgpack::{AgreementVote, HashDigest, NetPrioResponse, ProposalPayload},
         tagmsg::Tag,
         topic::{MsgOfInterest, TopicCodec, TopicMsgResp, UniCatchupReq, UniEnsBlockReq},
     },
@@ -26,6 +26,7 @@ pub enum Payload {
     UniCatchupReq(UniCatchupReq),
     TopicMsgResp(TopicMsgResp),
     NetPrioResponse(NetPrioResponse),
+    MsgDigestSkip(HashDigest),
     NotImplemented,
 }
 
@@ -83,6 +84,11 @@ impl Decoder for PayloadCodec {
                 rmp_serde::from_slice(src)
                     .map_err(|_| invalid_data!("couldn't deserialize the AgreementVote message"))?,
             ),
+            Tag::MsgDigestSkip => Payload::MsgDigestSkip(HashDigest(
+                src.to_vec()
+                    .try_into()
+                    .map_err(|_| invalid_data!("invalid hash digest for MsgDigestSkip"))?,
+            )),
             Tag::NetPrioResponse => {
                 Payload::NetPrioResponse(rmp_serde::from_slice(src).map_err(|_| {
                     invalid_data!("couldn't deserialize the NetPrioResponse message")
@@ -109,6 +115,9 @@ impl Encoder<Payload> for PayloadCodec {
             }
             Payload::ProposalPayload(pp) => rmp_serde::encode::to_vec(&pp)
                 .map_err(|_| invalid_data!("couldn't encode a payload message"))?,
+            Payload::AgreementVote(av) => rmp_serde::encode::to_vec(&av)
+                .map_err(|_| invalid_data!("couldn't encode an agreement vote message"))?,
+            Payload::MsgDigestSkip(hash) => hash.0.to_vec(),
             Payload::Ping(ping) => ping.nonce.to_vec(),
             _ => unimplemented!(),
         };
