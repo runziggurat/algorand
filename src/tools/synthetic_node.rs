@@ -58,7 +58,7 @@ impl SyntheticNodeBuilder {
     /// Creates a [`SyntheticNode`] with the current configuration.
     pub async fn build(&self) -> io::Result<SyntheticNode> {
         // Create the pea2pea node from the config.
-        let node = Node::new(self.network_config.clone()).await?;
+        let node = Node::new(self.network_config.clone());
 
         // Inbound channel size of 100 messages.
         let (tx, rx) = mpsc::channel(100);
@@ -104,6 +104,13 @@ impl SyntheticNode {
     /// If the handshake protocol is enabled it will be executed as well.
     pub async fn connect(&self, target: SocketAddr) -> io::Result<()> {
         self.inner.node().connect(target).await
+    }
+
+    /// Starts listening for inbound connections.
+    ///
+    /// Returns the listening socket address.
+    pub async fn start_listening(&self) -> io::Result<SocketAddr> {
+        self.inner.node().start_listening().await
     }
 
     /// Indicates if the `addr` is registered as a connected peer.

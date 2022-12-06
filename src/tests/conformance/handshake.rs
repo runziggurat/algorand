@@ -53,12 +53,15 @@ async fn c002_handshake_when_node_initiates_connection() {
         .await
         .expect("unable to build a synthetic node");
 
+    let listening_addr = synthetic_node
+        .start_listening()
+        .await
+        .expect("a synthetic node couldn't start listening");
+
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
     let mut node = Node::builder()
-        .initial_peers([synthetic_node
-            .listening_addr()
-            .expect("listening address not found")])
+        .initial_peers([listening_addr])
         .build(target.path())
         .expect("unable to build the node");
     node.start().await;
@@ -139,12 +142,15 @@ async fn c003_t2_expect_no_messages_before_handshake() {
         .await
         .expect("unable to build a synthetic node");
 
+    let listening_addr = synthetic_node
+        .start_listening()
+        .await
+        .expect("a synthetic node couldn't start listening");
+
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
     let mut node = Node::builder()
-        .initial_peers([synthetic_node
-            .listening_addr()
-            .expect("listening address not found")])
+        .initial_peers([listening_addr])
         .build(target.path())
         .expect("unable to build the node");
     node.start().await;

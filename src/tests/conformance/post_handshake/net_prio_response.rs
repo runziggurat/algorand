@@ -25,12 +25,15 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
         .await
         .expect("unable to build a synthetic node");
 
+    let listening_addr = synthetic_node
+        .start_listening()
+        .await
+        .expect("a synthetic node couldn't start listening");
+
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
     let mut node = Node::builder()
-        .initial_peers([synthetic_node
-            .listening_addr()
-            .expect("listening address not found")])
+        .initial_peers([listening_addr])
         .build(target.path())
         .expect("unable to build the node");
     node.start().await;
@@ -51,7 +54,7 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
 async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
     // ZG-CONFORMANCE-011
     //
-    // Do not send a challenge when answering to a handshake request.
+    // Do not send a challenge when answering a handshake request.
     // A NetPrioResponse message should not be received in that case.
 
     // Create a synthetic node and enable handshaking.
@@ -60,12 +63,15 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
         .await
         .expect("unable to build a synthetic node");
 
+    let listening_addr = synthetic_node
+        .start_listening()
+        .await
+        .expect("a synthetic node couldn't start listening");
+
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
     let mut node = Node::builder()
-        .initial_peers([synthetic_node
-            .listening_addr()
-            .expect("listening address not found")])
+        .initial_peers([listening_addr])
         .build(target.path())
         .expect("unable to build the node");
     node.start().await;
