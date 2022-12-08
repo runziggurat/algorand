@@ -35,7 +35,7 @@ setup_config_file() {
     echo "# Algorand installation path" > $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
     echo "path = \"$ALGORAND_BIN_PATH\"" >> $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
     echo "# Start command with possible arguments" >> $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
-    echo "start_command = \"$ALGOD_BIN_NAME\"" >> $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
+    echo "start_command = \"./$ALGOD_BIN_NAME\"" >> $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
 
     # Print file contents so the user can check whether the path is correct
     cat $ZIGGURAT_ALGORAND_SETUP_CFG_FILE
