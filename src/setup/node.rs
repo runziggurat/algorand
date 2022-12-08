@@ -152,7 +152,8 @@ impl Node {
             self.meta.start_args.push(ip_list.into());
         }
 
-        let child = Command::new(&self.meta.start_command)
+        let full_path = fs::canonicalize(self.meta.path.join(&self.meta.start_command)).unwrap();
+        let child = Command::new(full_path)
             .current_dir(&self.meta.path)
             .args(&self.meta.start_args)
             .stdin(Stdio::null())
