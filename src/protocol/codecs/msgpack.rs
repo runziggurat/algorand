@@ -17,6 +17,7 @@ use serde::{
     de::{Error, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
 };
+use sha2::Digest;
 
 // Period of time.
 type Period = u64;
@@ -56,7 +57,7 @@ pub struct NetPrioResponse {
 
     /// Sender address.
     #[serde(rename = "Sender")]
-    sender_addr: HashDigest,
+    sender_addr: Address,
 
     /// Signature.
     #[serde(rename = "Sig")]
@@ -77,7 +78,7 @@ pub struct ProposalValue {
     original_period: Period,
 
     #[serde(rename = "oprop")]
-    original_proposer: HashDigest,
+    original_proposer: Address,
 
     #[serde(rename = "dig")]
     block_digest: HashDigest,
@@ -90,7 +91,7 @@ pub struct ProposalValue {
 pub struct RawVote {
     /// Sender address.
     #[serde(rename = "snd")]
-    sender_addr: HashDigest,
+    sender_addr: Address,
 
     /// Round represents a protocol round index.
     #[serde(rename = "rnd")]
@@ -182,7 +183,7 @@ pub struct ProposalPayload {
 
     /// The FeeSink accepts transaction fees. It can only spend to the incentive pool.
     #[serde(rename = "fees")]
-    pub fee_sink: HashDigest,
+    pub fee_sink: Address,
 
     /// The number of leftover MicroAlgos after the distribution of RewardsRate/rewardUnits
     /// MicroAlgos for every reward unit in the next round.
@@ -220,7 +221,7 @@ pub struct ProposalPayload {
     /// The RewardsPool accepts periodic injections from the FeeSink and continually
     /// redistributes them to addresses as rewards.
     #[serde(rename = "rwd")]
-    pub rewards_pool: HashDigest,
+    pub rewards_pool: Address,
 
     /// Sortition seed.
     #[serde(rename = "seed", deserialize_with = "deserialize_byte32_arr_opt")]
@@ -249,7 +250,7 @@ pub struct ProposalPayload {
 
     /// Original proposal.
     #[serde(rename = "oprop")]
-    pub original_proposal: HashDigest,
+    pub original_proposal: Address,
 
     /// Prior vote.
     #[serde(default, rename = "pv")]
@@ -272,9 +273,84 @@ pub struct AgreementVote {
     pub sig: OneTimeSignature,
 }
 
+const CHECKSUM_LEN: usize = 4;
+const HASH_LEN: usize = 32;
+
+/// Public key address.
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct Address([u8; HASH_LEN]);
+
+impl Address {
+    /// Create a new [Address].
+    pub fn new(bytes: [u8; HASH_LEN]) -> Address {
+        Address(bytes)
+    }
+
+    /// Decode an address from a base64 string with a checksum.
+    pub fn from_string(string: &str) -> Result<Address, String> {
+        let checksum_address = match BASE32_NOPAD.decode(string.as_bytes()) {
+            Ok(decoded) => decoded,
+            Err(err) => return Err(format!("error decoding base32: {:?}", err)),
+        };
+
+        if checksum_address.len() != (HASH_LEN + CHECKSUM_LEN) {
+            return Err(format!("wrong address length: {}", checksum_address.len()));
+        }
+
+        let (address, checksum) = checksum_address.split_at(HASH_LEN);
+        let hashed = sha2::Sha512_256::digest(address);
+        if &hashed[(HASH_LEN - CHECKSUM_LEN)..] != checksum {
+            return Err("input checksum did not validate".to_string());
+        }
+
+        let mut bytes = [0; HASH_LEN];
+        bytes.copy_from_slice(address);
+        Ok(Address::new(bytes))
+    }
+
+    /// Encode an address to a base64 string with a checksum.
+    pub fn encode_string(&self) -> String {
+        let hashed = sha2::Sha512_256::digest(self.0);
+        let checksum = &hashed[(HASH_LEN - CHECKSUM_LEN)..];
+        let checksum_address = [&self.0, checksum].concat();
+
+        BASE32_NOPAD.encode(&checksum_address)
+    }
+}
+
+impl Display for Address {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.encode_string())
+    }
+}
+
+impl Debug for Address {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Serialize for Address {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(&self.0[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Address(deserializer.deserialize_bytes(VisitorU8_32)?))
+    }
+}
+
 /// A SHA512_256 hash.
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct HashDigest(pub [u8; 32]);
+pub struct HashDigest(pub [u8; HASH_LEN]);
 
 impl Display for HashDigest {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -309,7 +385,7 @@ impl<'de> Deserialize<'de> for HashDigest {
 pub struct VisitorU8_32;
 
 impl<'de> Visitor<'de> for VisitorU8_32 {
-    type Value = [u8; 32];
+    type Value = [u8; HASH_LEN];
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str("expecting a 32 byte array")
@@ -319,17 +395,19 @@ impl<'de> Visitor<'de> for VisitorU8_32 {
     where
         E: serde::de::Error,
     {
-        if v.len() != 32 {
-            return Err(E::custom(format!("Invalid byte array length: {}", v.len())));
+        if v.len() != HASH_LEN {
+            return Err(E::custom(format!("invalid byte array length: {}", v.len())));
         }
 
-        let mut bytes = [0; 32];
+        let mut bytes = [0; HASH_LEN];
         bytes.copy_from_slice(v);
         Ok(bytes)
     }
 }
 
-pub fn deserialize_byte32_arr_opt<'de, D>(deserializer: D) -> Result<Option<[u8; 32]>, D::Error>
+pub fn deserialize_byte32_arr_opt<'de, D>(
+    deserializer: D,
+) -> Result<Option<[u8; HASH_LEN]>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -337,4 +415,24 @@ where
         Some(slice) => Some(slice.try_into().map_err(D::Error::custom)?),
         None => None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn address_decode() {
+        let s = "737777777777777777777777777777777777777777777777777UFEJ2CI";
+
+        let addr = Address::from_string(s).expect("failed to decode an address from a string");
+        assert_eq!(s, addr.encode_string());
+    }
+
+    #[test]
+    fn address_decode_invalid_checksum() {
+        let invalid_csum = "737777777777777777777777777777777777777777777777777UFEJ2CJ";
+
+        assert!(Address::from_string(invalid_csum).is_err());
+    }
 }

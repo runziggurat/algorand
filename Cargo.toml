@@ -17,6 +17,7 @@ pea2pea = "0.43"
 radix_fmt = "1.0"
 reqwest = { version = "0.11" }
 rmp-serde = "1.0.0"
+sha2 = "0.10"
 tempfile = "3.3"
 tokio-tungstenite = "0.17"
 tokio-util = { version = "0.7", features = ["codec"] }
