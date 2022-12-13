@@ -33,8 +33,8 @@ pub const NET_ADDR_FILE: &str = "algod-listen.net";
 /// documentation](https://developer.algorand.org/docs/run-a-node/reference/config/).
 pub const REST_ADDR_FILE: &str = "algod.net";
 
-/// Timeout when waiting for loading of addresses.
-pub const LOAD_ADDR_TIMEOUT_SECS: Duration = Duration::from_secs(3);
+/// Timeout when waiting for loading of files.
+pub const LOAD_FILE_TIMEOUT_SECS: Duration = Duration::from_secs(3);
 
 /// Timeout when waiting for [Node](crate::setup::node::Node)'s start.
 pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(10);

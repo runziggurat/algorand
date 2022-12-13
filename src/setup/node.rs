@@ -62,7 +62,7 @@ impl NodeBuilder {
         copy_options.overwrite = true;
         dir::copy(&source, target, &copy_options)?;
 
-        // TODO(Rqnsom) configure the node.
+        // Note: we would implement dynamic node configuration here if the need occurs.
 
         let mut conf = self.conf.clone();
         conf.path = target.to_path_buf();
