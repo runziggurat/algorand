@@ -3,6 +3,8 @@
 pub mod config;
 pub mod constants;
 #[allow(dead_code)]
+pub mod kmd;
+#[allow(dead_code)]
 pub mod node;
 
 use std::{io, path::PathBuf};
