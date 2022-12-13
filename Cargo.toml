@@ -20,6 +20,7 @@ pea2pea = "0.43"
 radix_fmt = "1.0"
 reqwest = { version = "0.11" }
 rmp-serde = "1.0.0"
+serde_bytes = "0.11"
 sha2 = "0.10"
 tabled = "0.10"
 tempfile = "3.3"

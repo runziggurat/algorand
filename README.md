@@ -23,7 +23,17 @@ environment variable and rerun the setup script:
     export ALGORAND_BIN_PATH="$HOME/node"   # example path
     tools/setup_env.sh
 ```
-4. Run tests with the following command:
+4. Create a package of IP addresses which are required for performance tests. From the root repository directory run, e.g.:
+   Under Linux (to generate dummy devices with addresses):
+   ```
+   sudo python3 ./tools/ips.py --subnet 1.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth
+   ```
+   Under MacOS or Linux (to add whole subnet to loopback device - under Linux: lo, MacOS: lo0):
+   ```
+   sudo python3 ./tools/ips.py --subnet 1.1.1.0/24 --file src/tools/ips.rs --dev lo0
+   ```
+   Read ./tools/ips.py for more details.
+5. Run tests with the following command:
 ```zsh
     cargo +stable t -- --test-threads=1
 ```
