@@ -14,7 +14,7 @@ use serde::Deserialize;
 use tokio::time::{sleep, timeout, Duration};
 
 use crate::setup::constants::{
-    LOAD_ADDR_TIMEOUT_SECS, NET_ADDR_FILE, REST_ADDR_FILE, SETUP_CONFIG,
+    LOAD_FILE_TIMEOUT_SECS, NET_ADDR_FILE, REST_ADDR_FILE, SETUP_CONFIG,
 };
 
 /// Startup configuration for the node.
@@ -58,7 +58,7 @@ impl NodeConfig {
         let mut net_addr = String::new();
         let mut rest_addr = String::new();
 
-        timeout(LOAD_ADDR_TIMEOUT_SECS, async {
+        timeout(LOAD_FILE_TIMEOUT_SECS, async {
             let net_addr_path = self.path.join(NET_ADDR_FILE);
             let rest_addr_path = self.path.join(REST_ADDR_FILE);
 
@@ -106,6 +106,7 @@ pub struct NodeMetaData {
 }
 
 impl NodeMetaData {
+    /// Creates a new [NodeMetaData].
     pub fn new(setup_path: &Path) -> Result<NodeMetaData> {
         // Read Ziggurat's configuration file.
         let path = setup_path.join(SETUP_CONFIG);
