@@ -1,11 +1,4 @@
 //! Message pack deserializer for algod messages.
-//!
-//! Note:
-//!   Not all fields are yet deserialized in the messages below, but all fields are at least listed.
-//!   The naming of the fields and messages correspond to those in the original go-algorand repo.
-//!
-//! TODO(Rqnsom): deserialize 64-byte arrays (fully deserialize all the fields).
-//!
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
@@ -13,35 +6,17 @@ use std::{
 };
 
 use data_encoding::{BASE32_NOPAD, BASE64};
-use serde::{
-    de::{Error, Visitor},
-    Deserialize, Deserializer, Serialize, Serializer,
-};
+use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 
-// Period of time.
+/// Period of time.
 type Period = u64;
 
-// Algorand is organized in logical units (r = 0, 1...) called rounds in which new blocks are created.
+/// Algorand is organized in logical units (r = 0, 1...) called rounds in which new blocks are created.
 pub type Round = u64;
 
-// Each [Round] is divided into multiple steps.
+/// Each [Round] is divided into multiple steps.
 type Step = u64;
-
-// A Seed holds the entropy needed to generate cryptographic keys.
-type Seed = Ed25519Seed;
-
-// Verifiable Random Function proof.
-#[allow(unused)]
-type VrfProof = [u8; 80];
-
-/* Classical signatures */
-#[allow(unused)]
-type Ed25519Signature = [u8; 64];
-type Ed25519PublicKey = [u8; 32];
-#[allow(unused)]
-type Ed25519PrivateKey = [u8; 64];
-type Ed25519Seed = [u8; 32];
 
 /// A [NetPrioResponse] contains an answer to the challenge provided within handshake accept
 /// message from the server.
@@ -120,38 +95,39 @@ pub struct RawVote {
 /// of a secret-key compromise.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OneTimeSignature {
-    // Sig is a signature of msg under the key PK.
-    //#[serde(rename = "s", deserialize_with = "deserialize_byte64_arr_opt")]
-    //sig: Ed25519Signature,
+    /// Sig is a signature of msg under the key PK.
+    #[serde(rename = "s")]
+    sig: Ed25519Signature,
     /// Public key.
-    #[serde(rename = "p", deserialize_with = "deserialize_byte32_arr_opt")]
-    pk: Option<Ed25519PublicKey>,
+    #[serde(rename = "p")]
+    pk: Ed25519PublicKey,
 
-    // Old-style signature that does not use proper domain separation.
-    // PKSigOld is unused; however, unfortunately we forgot to mark it
-    // `codec:omitempty` and so it appears (with zero value) in certs.
-    // This means we can't delete the field without breaking catchup.
-    //#[serde(rename = "ps", deserialize_with = "deserialize_byte64_arr_opt")]
-    //pksigold: Ed25519Signature,
+    /// Old-style signature that does not use proper domain separation.
+    /// PKSigOld is unused; however, unfortunately we forgot to mark it
+    /// `codec:omitempty` and so it appears (with zero value) in certs.
+    /// This means we can't delete the field without breaking catchup.
+    #[serde(rename = "ps")]
+    pksigold: Ed25519Signature,
 
-    // Used to verify a new-style two-level ephemeral signature.
-    // PK1Sig is a signature of OneTimeSignatureSubkeyOffsetID(PK, Batch, Offset) under the key PK2.
-    // PK2Sig is a signature of OneTimeSignatureSubkeyBatchID(PK2, Batch) under the master key (OneTimeSignatureVerifier).
-    #[serde(rename = "p2", deserialize_with = "deserialize_byte32_arr_opt")]
-    pk2: Option<Ed25519PublicKey>,
-    //#[serde(rename = "p1s", deserialize_with = "deserialize_byte64_arr_opt")]
-    //pk1sig: Option<Ed25519Signature>,
-    //#[serde(rename = "p2s", deserialize_with = "deserialize_byte64_arr_opt")]
-    //pk2sig: Ed25519Signature,
+    /// Used to verify a new-style two-level ephemeral signature.
+    #[serde(rename = "p2")]
+    pk2: Ed25519PublicKey,
+    /// PK1Sig is a signature of OneTimeSignatureSubkeyOffsetID(PK, Batch, Offset) under the key PK2.
+    #[serde(rename = "p1s")]
+    pk1sig: Ed25519Signature,
+    /// PK2Sig is a signature of OneTimeSignatureSubkeyBatchID(PK2, Batch) under the master key (OneTimeSignatureVerifier).
+    #[serde(rename = "p2s")]
+    pk2sig: Ed25519Signature,
 }
 
-// An UnauthenticatedCredential is a Credential which has not yet been authenticated.
+/// An UnauthenticatedCredential is a Credential which has not yet been authenticated.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnauthenticatedCredential {
-    // A VrfProof for a message can be generated with a secret key and verified against a public key, like a signature.
-    // Proofs are malleable, however, for a given message and public key, the VRF output that can be computed from a proof is unique.
-    //#[serde(default, rename = "pf")]
-    //vrf_proof: Option<VrfProof>,
+    /// A VrfProof for a message can be generated with a secret key and verified against a public key, like a signature.
+    /// Proofs are malleable, however, for a given message and public key,
+    /// the VRF output that can be computed from a proof is unique.
+    #[serde(rename = "pf", default)]
+    vrf_proof: Option<VrfProof>,
 }
 
 /// [UnauthenticatedVote] is a vote which has not been verified.
@@ -224,8 +200,8 @@ pub struct ProposalPayload {
     pub rewards_pool: Address,
 
     /// Sortition seed.
-    #[serde(rename = "seed", deserialize_with = "deserialize_byte32_arr_opt")]
-    pub sortition_seed: Option<Seed>,
+    #[serde(rename = "seed")]
+    pub sortition_seed: Option<Ed25519Seed>,
 
     /// TimeStamp in seconds since epoch.
     #[serde(default, rename = "ts")]
@@ -240,10 +216,10 @@ pub struct ProposalPayload {
     #[serde(default, rename = "txn256")]
     pub tx_merke_root_hash256: Option<HashDigest>,
 
-    ///// Seed proof.
-    //#[serde(default, rename = "sdpf")]
-    //seed_proof: Option<VrfProof>,
-    //
+    /// Seed proof.
+    #[serde(default, rename = "sdpf")]
+    pub seed_proof: Option<VrfProof>,
+
     /// Original period.
     #[serde(default, rename = "oper")]
     pub original_period: u64,
@@ -271,6 +247,110 @@ pub struct AgreementVote {
     /// Signature.
     #[serde(rename = "sig")]
     pub sig: OneTimeSignature,
+}
+/// Wraps a transaction in a signature.
+#[derive(Clone, Debug, Deserialize)]
+pub struct SignedTransaction {
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub sig: Option<Ed25519Signature>,
+
+    #[serde(rename = "msig", default, skip_serializing_if = "is_default")]
+    pub multisig: Option<MultisigSignature>,
+
+    #[serde(rename = "txn")]
+    pub transaction: Transaction,
+}
+
+/// A transaction that can appear in a block.
+#[derive(Debug, Clone, Deserialize)]
+pub struct Transaction {
+    /// Paid by the sender to the FeeSink to prevent denial-of-service. The minimum fee on Algorand
+    /// is currently 1000 microAlgos.
+    #[serde(rename = "fee")]
+    pub fee: u64,
+
+    /// The first round for when the transaction is valid. If the transaction is sent prior to this
+    /// round it will be rejected by the network.
+    #[serde(rename = "fv")]
+    pub first_valid: Round,
+
+    /// The hash of the genesis block of the network for which the transaction is valid.
+    #[serde(rename = "gh")]
+    pub genesis_hash: HashDigest,
+
+    /// The ending round for which the transaction is valid. After this round, the transaction will
+    /// be rejected by the network.
+    #[serde(rename = "lv")]
+    pub last_valid: Round,
+
+    /// The address of the account that pays the fee and amount.
+    #[serde(rename = "snd")]
+    pub sender: Address,
+
+    /// The human-readable string that identifies the network for the transaction. The genesis ID is
+    /// found in the genesis block.
+    #[serde(rename = "gen")]
+    pub genesis_id: String,
+
+    /// The group specifies that the transaction is part of a group and, if so, specifies the hash of
+    /// the transaction group. Assign a group ID to a transaction through the workflow described in
+    /// the Atomic Transfers Guide.
+    #[serde(rename = "grp", default)]
+    pub group: Option<HashDigest>,
+
+    /// A lease enforces mutual exclusion of transactions. If this field is nonzero, then once the
+    /// transaction is confirmed, it acquires the lease identified by the (Sender, Lease) pair of
+    /// the transaction until the LastValid round passes. While this transaction possesses the
+    /// lease, no other transaction specifying this lease can be confirmed. A lease is often used
+    /// in the context of Algorand Smart Contracts to prevent replay attacks. Read more about
+    /// Algorand Smart Contracts and see the Delegate Key Registration TEAL template for an example
+    /// implementation of leases. Leases can also be used to safeguard against unintended duplicate
+    /// spends. For example, if we send a transaction to the network and later realize my fee was too
+    /// low, we could send another transaction with a higher fee, but the same lease value. This would
+    /// ensure that only one of those transactions ends up getting confirmed during the validity period.
+    #[serde(rename = "lx", default)]
+    pub lease: Option<HashDigest>,
+
+    /// Any data up to 1000 bytes.
+    #[serde(with = "serde_bytes", default)]
+    pub note: Vec<u8>,
+
+    /// Specifies the authorized address. This address will be used to authorize all future transactions.
+    /// Learn more about Rekeying accounts.
+    #[serde(rename = "rekey", default)]
+    pub rekey_to: Option<Address>,
+
+    /// Specifies the type of transaction.
+    #[serde(flatten)]
+    pub txn_type: TransactionType,
+}
+
+/// Enum containing the types of transactions and their specific fields.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "type")]
+pub enum TransactionType {
+    /// Payment transaction.
+    #[serde(rename = "pay")]
+    Payment(Payment),
+    // Maybe include more types here later.
+}
+
+/// Fields for a payment transaction.
+#[derive(Debug, Clone, Deserialize)]
+pub struct Payment {
+    /// The address of the account that receives the amount.
+    #[serde(rename = "rcv")]
+    pub receiver: Address,
+
+    /// The total amount to be sent in microAlgos.
+    #[serde(rename = "amt")]
+    pub amount: u64,
+
+    /// When set, it indicates that the transaction is requesting that the Sender account should
+    /// be closed, and all remaining funds, after the fee and amount are paid, be transferred to
+    /// this address.
+    #[serde(rename = "close", default)]
+    pub close_remainder_to: Option<Address>,
 }
 
 const CHECKSUM_LEN: usize = 4;
@@ -350,7 +430,7 @@ impl<'de> Deserialize<'de> for Address {
 
 /// A SHA512_256 hash.
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct HashDigest(pub [u8; HASH_LEN]);
+pub struct HashDigest(pub [u8; 32]);
 
 impl Display for HashDigest {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -382,10 +462,164 @@ impl<'de> Deserialize<'de> for HashDigest {
     }
 }
 
+/// An Ed25519 Signature.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Ed25519Signature(pub [u8; 64]);
+
+impl Serialize for Ed25519Signature {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(&self.0[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Ed25519Signature {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Ed25519Signature(
+            deserializer.deserialize_bytes(SignatureVisitor)?,
+        ))
+    }
+}
+
+/// A MultisigSignature.
+#[derive(Default, Debug, Eq, PartialEq, Clone, Deserialize)]
+pub struct MultisigSignature {
+    #[serde(rename = "subsig")]
+    pub subsigs: Vec<MultisigSubsig>,
+
+    #[serde(rename = "thr")]
+    pub threshold: u8,
+
+    #[serde(rename = "v")]
+    pub version: u8,
+}
+
+/// A MultisigSubsig.
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
+pub struct MultisigSubsig {
+    #[serde(rename = "pk")]
+    pub key: Ed25519PublicKey,
+
+    #[serde(rename = "s")]
+    pub sig: Option<Ed25519Signature>,
+}
+
+/// An Ed25519PublicKey.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Ed25519PublicKey(pub [u8; 32]);
+
+impl Serialize for Ed25519PublicKey {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(&self.0[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Ed25519PublicKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Ed25519PublicKey(
+            deserializer.deserialize_bytes(VisitorU8_32)?,
+        ))
+    }
+}
+
+/// An [Ed25519Seed] holds the entropy needed to generate cryptographic keys.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Ed25519Seed(pub [u8; 32]);
+
+impl Serialize for Ed25519Seed {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(&self.0[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Ed25519Seed {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Ed25519Seed(deserializer.deserialize_bytes(VisitorU8_32)?))
+    }
+}
+
+/// Verifiable Random Function proof.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct VrfProof(pub [u8; 80]);
+
+impl Serialize for VrfProof {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(&self.0[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for VrfProof {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(VrfProof(deserializer.deserialize_bytes(VisitorU8_80)?))
+    }
+}
+
+/// Signature Visitor (`[u8; 64]` arrays).
+pub struct SignatureVisitor;
+
+impl<'de> Visitor<'de> for SignatureVisitor {
+    type Value = [u8; 64];
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("expecting a 64 byte array")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        TryInto::<Self::Value>::try_into(v)
+            .map_err(|_| E::custom(format!("invalid byte array length: {}", v.len())))
+    }
+}
+
+/// Visitor for `[u8; 80]` array.
+pub struct VisitorU8_80;
+
+impl<'de> Visitor<'de> for VisitorU8_80 {
+    type Value = [u8; 80];
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("expecting a 80 byte array")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        TryInto::<Self::Value>::try_into(v)
+            .map_err(|_| E::custom(format!("invalid byte array length: {}", v.len())))
+    }
+}
+
+/// Visitor for `[u8; 32]` array.
 pub struct VisitorU8_32;
 
 impl<'de> Visitor<'de> for VisitorU8_32 {
-    type Value = [u8; HASH_LEN];
+    type Value = [u8; 32];
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str("expecting a 32 byte array")
@@ -395,26 +629,9 @@ impl<'de> Visitor<'de> for VisitorU8_32 {
     where
         E: serde::de::Error,
     {
-        if v.len() != HASH_LEN {
-            return Err(E::custom(format!("invalid byte array length: {}", v.len())));
-        }
-
-        let mut bytes = [0; HASH_LEN];
-        bytes.copy_from_slice(v);
-        Ok(bytes)
+        TryInto::<Self::Value>::try_into(v)
+            .map_err(|_| E::custom(format!("invalid byte array length: {}", v.len())))
     }
-}
-
-pub fn deserialize_byte32_arr_opt<'de, D>(
-    deserializer: D,
-) -> Result<Option<[u8; HASH_LEN]>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    Ok(match <Option<&[u8]>>::deserialize(deserializer)? {
-        Some(slice) => Some(slice.try_into().map_err(D::Error::custom)?),
-        None => None,
-    })
 }
 
 #[cfg(test)]

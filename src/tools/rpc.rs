@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use tokio::time::{error::Elapsed, sleep};
 
 use crate::protocol::{
-    codecs::msgpack::{deserialize_byte32_arr_opt, HashDigest},
+    codecs::msgpack::{Ed25519Seed, HashDigest},
     constants::USER_AGENT,
 };
 
@@ -153,12 +153,8 @@ pub struct BlockHeaderMsgPack {
     pub rewards_pool: Option<HashDigest>,
 
     /// Sortition seed.
-    #[serde(
-        default,
-        rename = "seed",
-        deserialize_with = "deserialize_byte32_arr_opt"
-    )]
-    pub sortition_seed: Option<[u8; 32]>,
+    #[serde(rename = "seed", default)]
+    pub sortition_seed: Option<Ed25519Seed>,
 
     /// TimeStamp in seconds since epoch.
     #[serde(default, rename = "ts")]
