@@ -1,8 +1,8 @@
 //! The Key Management Daemon (kmd) is a low level wallet and key management
 //! tool. It works in conjunction with algod and goal to keep secrets safe.
 
-pub mod config;
-pub mod constants;
+mod config;
+mod constants;
 pub mod rest_api;
 
 use std::{
@@ -20,7 +20,6 @@ use tokio::{
 };
 
 use crate::setup::{
-    config::NodeMetaData,
     constants::ALGORAND_SETUP_DIR,
     get_algorand_work_path,
     kmd::{
@@ -32,6 +31,7 @@ use crate::setup::{
         },
     },
     node::ChildExitCode,
+    node_meta_data::NodeMetaData,
 };
 
 pub struct KmdBuilder {

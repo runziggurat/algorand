@@ -11,7 +11,8 @@ use crate::{
         codecs::{msgpack::Round, payload::Payload, tagmsg::Tag},
         invalid_data,
     },
-    tools::rpc::{BlockHeaderMsgPack, Certificate},
+    // TODO(Rqnsom): See if we can move these to msgpack.rs - should be possible easily
+    setup::node::rest_api::message::{BlockHeaderMsgPack, Certificate},
 };
 
 /// Topic keys.
