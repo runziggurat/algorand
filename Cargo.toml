@@ -15,7 +15,7 @@ home = "0.5.3"
 httparse = "1.8"
 pea2pea = "0.43"
 radix_fmt = "1.0"
-reqwest = { version = "0.11" }
+reqwest = { version = "0.11", features = ["json"] }
 rmp-serde = "1.0.0"
 serde_bytes = "0.11"
 sha2 = "0.10"

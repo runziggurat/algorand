@@ -21,9 +21,12 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         .expect("unable to build the kmd instance");
     kmd.start().await;
 
+    let wallets = kmd.get_wallets().await.expect("couldn't get the wallets");
+    println!("a temporary log with wallets: {:?}", wallets);
+
     // TODO(Rqnsom):
     // 1. add two synthetic_node nodes
-    // 2. prepare a transaction via kmd V1 REST API
+    // 2. prepare a transaction via kmd V1 REST API (ongoing)
     // 3. the synthetic_node_tx node submits a txn to the node
     // 4. the synthetic_node_rx node expects that same txn from the node
 
