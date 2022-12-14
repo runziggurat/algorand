@@ -35,9 +35,10 @@ const RESPONSE_TIMEOUT: Duration = Duration::from_secs(3);
 async fn p001_t1_GET_BLOCKS_latency() {
     // ZG-PERFORMANCE-001, Block getting latency
     //
-    // The node behaves as expected under load from other peers.
-    //
+    // This test checks if node behaves as expected under load from other peers.
     // We test the overall performance of a node's get blocks (with certs) latency.
+    //
+    // Results should be inspected manually as they are strongly dependent on the machine.
     //
     // Sample results:
     // ┌─────────┬────────────┬────────────┬────────────┬────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────────┬────────────┬──────────────┐

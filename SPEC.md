@@ -214,3 +214,15 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     Reserved
 
+## Performance 
+
+### ZG-PERFORMANCE-001
+
+    The node behaves as expected under load when other peers are requesting blocks with certificates.
+
+    <>
+    In loop:
+        -> UniEnsBlockReq / UniCatchupReq
+        <- TopicMsgResp
+
+    Results should be introspected manually to check node's health and responsiveness (latency, throughput) when requesting block data. 
