@@ -2,6 +2,7 @@
 
 mod config;
 mod constants;
+pub mod rest_api;
 
 use std::{
     collections::HashSet,

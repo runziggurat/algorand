@@ -8,6 +8,4 @@ pub mod ips;
 #[allow(dead_code)]
 pub mod metrics;
 #[allow(dead_code)]
-pub mod rpc;
-#[allow(dead_code)]
 pub mod synthetic_node;

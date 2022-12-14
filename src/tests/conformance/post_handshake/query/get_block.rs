@@ -5,8 +5,8 @@ use crate::{
         payload::Payload,
         topic::{TopicMsgResp, UniCatchupReq, UniEnsBlockReq, UniEnsBlockReqType},
     },
-    setup::node::Node,
-    tools::{rpc, synthetic_node::SyntheticNodeBuilder},
+    setup::node::{rest_api, Node},
+    tools::synthetic_node::SyntheticNodeBuilder,
 };
 
 #[tokio::test]
@@ -38,7 +38,8 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
     let rpc_addr = net_addr.to_string();
 
     for round in 0..4 {
-        let block_cert = rpc::wait_for_block(&rpc_addr, round)
+        // TODO(Rqnsom): integrate rest_api client into the node.
+        let block_cert = rest_api::client::wait_for_block(&rpc_addr, round)
             .await
             .expect("couldn't get a block");
 
