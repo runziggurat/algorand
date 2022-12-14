@@ -26,7 +26,10 @@ use crate::setup::{
     kmd::{
         config::KmdConfig,
         constants::{CONNECTION_TIMEOUT, REST_ADDR_FILE},
-        rest_api::{client::ClientV1, message::ListWalletsResponse},
+        rest_api::{
+            client::ClientV1,
+            message::{InitWalletHandleResponse, ListWalletsResponse},
+        },
     },
     node::ChildExitCode,
 };
@@ -162,6 +165,21 @@ impl Kmd {
     pub async fn get_wallets(&mut self) -> anyhow::Result<ListWalletsResponse> {
         if let Some(rest_client) = &self.rest_client {
             return rest_client.get_wallets().await;
+        }
+
+        Err(anyhow!("the kmd instance is not started"))
+    }
+
+    /// Unlock the wallet and return a wallet handle token that can be used for subsequent operations.
+    pub async fn get_wallet_handle_token(
+        &mut self,
+        wallet_id: String,
+        wallet_password: String,
+    ) -> anyhow::Result<InitWalletHandleResponse> {
+        if let Some(rest_client) = &self.rest_client {
+            return rest_client
+                .get_wallet_handle_token(wallet_id, wallet_password)
+                .await;
         }
 
         Err(anyhow!("the kmd instance is not started"))

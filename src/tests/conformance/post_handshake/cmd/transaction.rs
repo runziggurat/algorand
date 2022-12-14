@@ -22,11 +22,22 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     kmd.start().await;
 
     let wallets = kmd.get_wallets().await.expect("couldn't get the wallets");
-    println!("a temporary log with wallets: {:?}", wallets);
+    let wallet_id = wallets
+        .wallets
+        .into_iter()
+        .find(|wallet| wallet.name == "unencrypted-default-wallet")
+        .expect("couldn't find an unencrypted default wallet")
+        .id;
+
+    let init_wallet_rsp = kmd.get_wallet_handle_token(wallet_id, "".to_string()).await;
+    println!(
+        "a temporary log with init_wallet_rsp: {:?}",
+        init_wallet_rsp
+    );
 
     // TODO(Rqnsom):
     // 1. add two synthetic_node nodes
-    // 2. prepare a transaction via kmd V1 REST API (ongoing)
+    // 2. prepare a transaction via kmd V1 REST API (ongoing...)
     // 3. the synthetic_node_tx node submits a txn to the node
     // 4. the synthetic_node_rx node expects that same txn from the node
 
