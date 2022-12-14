@@ -1,7 +1,6 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
-    thread,
     time::{Duration, Instant},
 };
 
@@ -10,6 +9,7 @@ use tokio::{net::TcpSocket, time::timeout};
 
 use crate::{
     protocol::codecs::{
+        msgpack::Round,
         payload::Payload,
         topic::{TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
     },
@@ -25,7 +25,6 @@ use crate::{
 };
 
 const METRIC_LATENCY: &str = "block_test_latency";
-const CONNECTION_PORT: u16 = 31337;
 // number of requests to send per peer
 const REQUESTS: u16 = 100;
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(3);
@@ -68,12 +67,11 @@ async fn p001_t1_GET_BLOCKS_latency() {
     // Before running test generate dummy devices with different ips using toos/ips.py
 
     let synth_counts = vec![1, 50, 100, 200, 300, 400, 500, 600, 700, 800];
-    //let synth_counts = vec![1, 50,];
 
     let mut table = RequestsTable::default();
 
     for synth_count in synth_counts {
-        let target = TempDir::new().expect("Unable to create TempDir");
+        let target = TempDir::new().expect("couldn't create a temporary directory");
         let mut node = Node::builder()
             .build(target.path())
             .expect("unable to build the node");
@@ -85,22 +83,20 @@ async fn p001_t1_GET_BLOCKS_latency() {
         let mut ips = IPS.to_vec();
 
         for _ in 0..synth_count {
+            // If there is address for our thread in the pool we can use it.
+            // Otherwise we'll not set bound_addr and use local IP addr (127.0.0.1).
+            let ip = if let Some(ip_addr) = ips.pop() {
+                ip_addr
+            } else {
+                "127.0.0.1"
+            };
+
+            let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::from_str(ip).unwrap()), 0);
             let socket = TcpSocket::new_v4().unwrap();
 
             // Make sure we can reuse the address and port
             socket.set_reuseaddr(true).unwrap();
             socket.set_reuseport(true).unwrap();
-
-            // If there is address for our thread in the pool we can use it.
-            // Otherwise we'll not set bound_addr and use local IP addr (127.0.0.1).
-            let ip = if let Some(ip_addr) = ips.pop() {
-                SocketAddr::new(
-                    IpAddr::V4(Ipv4Addr::from_str(ip_addr).unwrap()),
-                    CONNECTION_PORT,
-                )
-            } else {
-                "127.0.0.1:0".parse().unwrap()
-            };
 
             socket.bind(ip).expect("unable to bind to socket");
             synth_sockets.push(socket);
@@ -123,8 +119,6 @@ async fn p001_t1_GET_BLOCKS_latency() {
             let _ = handle.await;
         }
 
-        thread::sleep(Duration::from_secs(1));
-
         let time_taken_secs = test_start.elapsed().as_secs_f64();
 
         let snapshot = test_metrics.take_snapshot();
@@ -140,13 +134,14 @@ async fn p001_t1_GET_BLOCKS_latency() {
             }
         }
 
-        node.stop().unwrap();
+        node.stop().expect("unable to stop the node");
     }
 
     // Display results table
     println!("\r\n{}", table);
 }
 
+const ROUND_KEY: Round = 1;
 #[allow(unused_must_use)] // just for result of the timeout
 async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
     let mut synth_node = SyntheticNodeBuilder::default()
@@ -160,21 +155,21 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
         .await
         .expect("unable to connect to node");
 
-    for _ in 0..REQUESTS {
+    for i in 0..REQUESTS {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
             data_type: UniEnsBlockReqType::BlockAndCert,
-            round_key: 0,
-            nonce: 0,
+            round_key: ROUND_KEY,
+            nonce: i as u64,
         });
 
-        if synth_node.is_connected(node_addr) {
-            synth_node
-                .unicast(node_addr, message)
-                .expect("unable to send message");
-        } else {
-            synth_node.shut_down().await;
-            return;
+        // Query transaction via peer protocol.
+        if !synth_node.is_connected(node_addr) {
+            break;
         }
+
+        synth_node
+            .unicast(node_addr, message)
+            .expect("unable to send message");
 
         let now = Instant::now();
 
@@ -185,7 +180,7 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
             loop {
                 let m = synth_node.recv_message().await;
                 if matches!(&m.1, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
-                     if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == 0 && rsp.cert.is_some()) {
+                     if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == ROUND_KEY && rsp.cert.is_some()) {
                     metrics::histogram!(METRIC_LATENCY, duration_as_ms(now.elapsed()));
                     break;
                 }

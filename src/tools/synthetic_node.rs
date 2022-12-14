@@ -107,11 +107,11 @@ impl SyntheticNode {
         self.inner.node().connect(target).await
     }
 
-    /// Connects to the target address.
+    /// Connects to the target address using specified source socket.
     ///
     /// If the handshake protocol is enabled it will be executed as well.
-    pub async fn connect_from(&self, target: SocketAddr, socket: TcpSocket) -> io::Result<()> {
-        self.inner.node().connect_using_socket(target, socket).await
+    pub async fn connect_from(&self, target: SocketAddr, source: TcpSocket) -> io::Result<()> {
+        self.inner.node().connect_using_socket(target, source).await
     }
 
     /// Starts listening for inbound connections.

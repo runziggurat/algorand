@@ -222,7 +222,7 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     <>
     In loop:
-        -> UniEnsBlockReq / UniCatchupReq
+        -> UniEnsBlockReq
         <- TopicMsgResp
 
     Results should be introspected manually to check node's health and responsiveness (latency, throughput) when requesting block data. 
