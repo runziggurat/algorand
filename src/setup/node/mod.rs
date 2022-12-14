@@ -1,5 +1,8 @@
 //! High level APIs and types for node setup and teardown.
 
+mod config;
+mod constants;
+
 use std::{
     collections::HashSet,
     fs, io,
@@ -16,13 +19,14 @@ use tokio::{
     time::{sleep, Duration},
 };
 
-use super::constants::{
-    ALGORAND_SETUP_DIR, CONNECTION_TIMEOUT, NET_ADDR_FILE, NODE_DIR, PRIVATE_NETWORK_DIR,
-    REST_ADDR_FILE,
-};
 use crate::setup::{
-    config::{NodeConfig, NodeMetaData},
+    constants::{ALGORAND_SETUP_DIR, PRIVATE_NETWORK_DIR},
     get_algorand_work_path,
+    node::{
+        config::NodeConfig,
+        constants::{CONNECTION_TIMEOUT, NET_ADDR_FILE, NODE_DIR, REST_ADDR_FILE},
+    },
+    node_meta_data::NodeMetaData,
 };
 
 pub enum ChildExitCode {
