@@ -85,11 +85,7 @@ async fn p001_t1_GET_BLOCKS_latency() {
         for _ in 0..synth_count {
             // If there is address for our thread in the pool we can use it.
             // Otherwise we'll not set bound_addr and use local IP addr (127.0.0.1).
-            let ip = if let Some(ip_addr) = ips.pop() {
-                ip_addr
-            } else {
-                "127.0.0.1"
-            };
+            let ip = ips.pop().unwrap_or("127.0.0.1");
 
             let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::from_str(ip).unwrap()), 0);
             let socket = TcpSocket::new_v4().unwrap();
