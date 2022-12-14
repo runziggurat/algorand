@@ -3,6 +3,7 @@
 
 pub mod config;
 pub mod constants;
+pub mod rest_api;
 
 use std::{
     fs, io,
@@ -25,6 +26,7 @@ use crate::setup::{
     kmd::{
         config::KmdConfig,
         constants::{CONNECTION_TIMEOUT, REST_ADDR_FILE},
+        rest_api::{client::ClientV1, message::ListWalletsResponse},
     },
     node::ChildExitCode,
 };
@@ -53,6 +55,7 @@ impl KmdBuilder {
             child: None,
             conf: KmdConfig::new(node_path).await?,
             meta: self.meta.clone(),
+            rest_client: None,
         })
     }
 }
@@ -64,6 +67,8 @@ pub struct Kmd {
     conf: KmdConfig,
     /// Node's process metadata read from Ziggurat configuration files.
     meta: NodeMetaData,
+    /// REST API client.
+    rest_client: Option<ClientV1>,
 }
 
 impl Kmd {
@@ -113,7 +118,15 @@ impl Kmd {
             .await
             .expect("couldn't load the kmd's address");
 
-        Kmd::wait_for_start(self.conf.rest_api_addr.unwrap()).await;
+        // Get the API addr - unwrap will always work here (ensured by the block above).
+        let rest_api_addr = self.conf.rest_api_addr.unwrap();
+
+        Kmd::wait_for_start(rest_api_addr).await;
+
+        self.rest_client = Some(ClientV1::new(
+            &rest_api_addr.to_string(),
+            self.conf.token.clone(),
+        ));
     }
 
     /// Stops the kmd instance.
@@ -143,6 +156,15 @@ impl Kmd {
             Some(exit) if exit == 0 => Ok(ChildExitCode::Success),
             Some(exit) => Ok(ChildExitCode::ErrorCode(Some(exit))),
         }
+    }
+
+    /// Get the list of wallets.
+    pub async fn get_wallets(&mut self) -> anyhow::Result<ListWalletsResponse> {
+        if let Some(rest_client) = &self.rest_client {
+            return rest_client.get_wallets().await;
+        }
+
+        Err(anyhow!("the kmd instance is not started"))
     }
 }
 
