@@ -17,28 +17,28 @@ pub struct Snapshot(HashMap<CompositeKey, MetricVal>);
 impl Snapshot {
     pub fn get_counter(&self, metric: &'static str) -> u64 {
         let key = CompositeKey::new(MetricKind::Counter, Key::from_name(metric));
-        if let MetricVal::Counter(val) = *self.0.get(&key).unwrap() {
-            val
-        } else {
-            0
+
+        match self.0.get(&key) {
+            Some(MetricVal::Counter(val)) => *val,
+            _ => 0,
         }
     }
 
     pub fn get_gauge(&self, metric: &'static str) -> f64 {
         let key = CompositeKey::new(MetricKind::Gauge, Key::from_name(metric));
-        if let MetricVal::Gauge(val) = *self.0.get(&key).unwrap() {
-            val
-        } else {
-            0.0
+
+        match self.0.get(&key) {
+            Some(MetricVal::Gauge(val)) => *val,
+            _ => 0.0,
         }
     }
 
     pub fn get_histogram(&self, metric: &'static str) -> Option<Vec<f64>> {
         let key = CompositeKey::new(MetricKind::Histogram, Key::from_name(metric));
-        if let MetricVal::Histogram(vals) = self.0.get(&key).unwrap() {
-            Some(vals.to_vec())
-        } else {
-            None
+
+        match self.0.get(&key) {
+            Some(MetricVal::Histogram(val)) => Some(val.to_vec()),
+            _ => None,
         }
     }
 
@@ -189,7 +189,7 @@ mod tests {
         let snapshot = metrics.take_snapshot();
         let constructed_histogram = snapshot.construct_histogram(METRIC_NAME).unwrap();
 
-        assert!(constructed_histogram.entries() == 4);
+        assert_eq!(constructed_histogram.entries(), 4);
         assert_eq!(constructed_histogram.percentile(50.0).unwrap(), 5);
         assert_eq!(constructed_histogram.percentile(90.0).unwrap(), 9);
     }
