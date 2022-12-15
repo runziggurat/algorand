@@ -187,7 +187,7 @@ impl Node {
         self.rest_client = Some(RestClient::new(
             net_addr.to_string(),
             rest_api_addr.to_string(),
-            String::new(),
+            self.conf.rest_api_auth_token.clone(),
         ));
     }
 
@@ -281,7 +281,6 @@ mod test {
 
         assert!(node.stop().is_ok());
         // Addresses are deleted after the node is stopped.
-        assert!(node.rest_client().is_none());
         assert!(node.net_addr().is_none());
 
         // Restart the node.

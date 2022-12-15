@@ -7,7 +7,7 @@ use tokio::time::timeout;
 use crate::setup::{
     self,
     constants::LOAD_FILE_TIMEOUT_SECS,
-    node::constants::{NET_ADDR_FILE, REST_ADDR_FILE},
+    node::constants::{AUTH_TOKEN_FILE, NET_ADDR_FILE, REST_ADDR_FILE},
 };
 
 /// Startup configuration for the node.
@@ -21,6 +21,8 @@ pub struct NodeConfig {
     pub net_addr: Option<SocketAddr>,
     /// The REST API socket address of the node.
     pub rest_api_addr: Option<SocketAddr>,
+    /// The REST API authentication token.
+    pub rest_api_auth_token: String,
     /// The initial peer set of the node.
     pub initial_peers: HashSet<SocketAddr>,
 }
@@ -34,9 +36,12 @@ impl NodeConfig {
         timeout(LOAD_FILE_TIMEOUT_SECS, async {
             let net_addr_path = self.path.join(NET_ADDR_FILE);
             let rest_addr_path = self.path.join(REST_ADDR_FILE);
+            let auth_token_path = self.path.join(AUTH_TOKEN_FILE);
 
             net_addr = setup::try_read_to_string(&net_addr_path).await;
             rest_addr = setup::try_read_to_string(&rest_addr_path).await;
+
+            self.rest_api_auth_token = setup::try_read_to_string(&auth_token_path).await;
         })
         .await
         .expect("couldn't fetch node's addresses");
