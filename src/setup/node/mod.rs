@@ -65,7 +65,7 @@ impl NodeBuilder {
         let mut copy_options = dir::CopyOptions::new();
         copy_options.content_only = true;
         copy_options.overwrite = true;
-        dir::copy(&source, target, &copy_options)?;
+        dir::copy(source, target, &copy_options)?;
 
         // Note: we would implement dynamic node configuration here if the need occurs.
 
