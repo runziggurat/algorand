@@ -5,7 +5,7 @@ use std::{
 };
 
 use tempfile::TempDir;
-use tokio::{net::TcpSocket, time::timeout};
+use tokio::{net::TcpSocket, task::JoinSet, time::timeout};
 
 use crate::{
     protocol::codecs::{
@@ -103,17 +103,15 @@ async fn p001_t1_GET_BLOCKS_latency() {
         // clear metrics and register metrics
         metrics::register_histogram!(METRIC_LATENCY);
 
-        let mut synth_handles = Vec::with_capacity(synth_count);
+        let mut synth_handles = JoinSet::new();
         let test_start = tokio::time::Instant::now();
 
         for socket in synth_sockets {
-            synth_handles.push(tokio::spawn(simulate_peer(node_addr, socket)));
+            synth_handles.spawn(simulate_peer(node_addr, socket));
         }
 
         // wait for peers to complete
-        for handle in synth_handles {
-            let _ = handle.await;
-        }
+        while (synth_handles.join_next().await).is_some() {}
 
         let time_taken_secs = test_start.elapsed().as_secs_f64();
 
