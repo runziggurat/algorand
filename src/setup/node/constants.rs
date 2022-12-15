@@ -18,5 +18,8 @@ pub const NET_ADDR_FILE: &str = "algod-listen.net";
 /// documentation](https://developer.algorand.org/docs/run-a-node/reference/config/).
 pub const REST_ADDR_FILE: &str = "algod.net";
 
+/// Authentication token file which stores the token needed for some REST API calls.
+pub const AUTH_TOKEN_FILE: &str = "algod.token";
+
 /// Timeout when waiting for [Node](crate::setup::node::Node)'s start.
 pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(10);

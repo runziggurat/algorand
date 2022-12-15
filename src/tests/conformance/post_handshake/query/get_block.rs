@@ -5,7 +5,7 @@ use crate::{
         payload::Payload,
         topic::{TopicMsgResp, UniCatchupReq, UniEnsBlockReq, UniEnsBlockReqType},
     },
-    setup::node::{rest_api, Node},
+    setup::node::Node,
     tools::synthetic_node::SyntheticNodeBuilder,
 };
 
@@ -35,11 +35,11 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
         .await
         .expect("unable to connect");
 
-    let rpc_addr = net_addr.to_string();
+    let rest_client = node.rest_client().expect("couldn't get the rest client");
 
     for round in 0..4 {
-        // TODO(Rqnsom): integrate rest_api client into the node.
-        let block_cert = rest_api::client::wait_for_block(&rpc_addr, round)
+        let block_cert = rest_client
+            .wait_for_block(round)
             .await
             .expect("couldn't get a block");
 

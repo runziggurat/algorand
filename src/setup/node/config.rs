@@ -1,17 +1,13 @@
 //! Utilities for node configuration.
 
-use std::{
-    collections::HashSet,
-    net::SocketAddr,
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::{collections::HashSet, net::SocketAddr, path::PathBuf, str::FromStr};
 
-use tokio::time::{sleep, timeout, Duration};
+use tokio::time::timeout;
 
 use crate::setup::{
+    self,
     constants::LOAD_FILE_TIMEOUT_SECS,
-    node::constants::{NET_ADDR_FILE, REST_ADDR_FILE},
+    node::constants::{AUTH_TOKEN_FILE, NET_ADDR_FILE, REST_ADDR_FILE},
 };
 
 /// Startup configuration for the node.
@@ -25,42 +21,27 @@ pub struct NodeConfig {
     pub net_addr: Option<SocketAddr>,
     /// The REST API socket address of the node.
     pub rest_api_addr: Option<SocketAddr>,
+    /// The REST API authentication token.
+    pub rest_api_auth_token: String,
     /// The initial peer set of the node.
     pub initial_peers: HashSet<SocketAddr>,
 }
 
 impl NodeConfig {
-    /// Continuously try to read a string from a file.
-    async fn try_read_to_string(file_path: &Path) -> String {
-        loop {
-            match tokio::fs::read_to_string(&file_path).await {
-                Ok(content) => {
-                    if SocketAddr::from_str(content.trim().trim_start_matches("http://")).is_err() {
-                        continue;
-                    }
-                    return content;
-                }
-                Err(e) => {
-                    if e.kind() == tokio::io::ErrorKind::NotFound {
-                        sleep(Duration::from_millis(100)).await;
-                        continue;
-                    }
-                }
-            };
-        }
-    }
-
-    /// Fetches the node's addresses.
-    pub async fn load_addrs(&mut self) -> anyhow::Result<()> {
+    /// Fetches the node's runtime configuration - addresses and authorization tokens.
+    pub async fn load_runtime_cfg(&mut self) -> anyhow::Result<()> {
         let mut net_addr = String::new();
         let mut rest_addr = String::new();
 
         timeout(LOAD_FILE_TIMEOUT_SECS, async {
             let net_addr_path = self.path.join(NET_ADDR_FILE);
             let rest_addr_path = self.path.join(REST_ADDR_FILE);
+            let auth_token_path = self.path.join(AUTH_TOKEN_FILE);
 
-            net_addr = NodeConfig::try_read_to_string(&net_addr_path).await;
-            rest_addr = NodeConfig::try_read_to_string(&rest_addr_path).await;
+            net_addr = setup::try_read_to_string(&net_addr_path).await;
+            rest_addr = setup::try_read_to_string(&rest_addr_path).await;
+
+            self.rest_api_auth_token = setup::try_read_to_string(&auth_token_path).await;
         })
         .await
         .expect("couldn't fetch node's addresses");
@@ -78,6 +59,7 @@ impl NodeConfig {
             SocketAddr::from_str(rest_addr.trim())
                 .expect("couldn't create the REST API socket address"),
         );
+
         Ok(())
     }
 }

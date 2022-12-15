@@ -26,6 +26,7 @@ use crate::setup::{
     node::{
         config::NodeConfig,
         constants::{CONNECTION_TIMEOUT, NET_ADDR_FILE, NODE_DIR, REST_ADDR_FILE},
+        rest_api::client::RestClient,
     },
     node_meta_data::NodeMetaData,
 };
@@ -76,6 +77,7 @@ impl NodeBuilder {
             child: None,
             conf,
             meta: self.meta.clone(),
+            rest_client: None,
         })
     }
 
@@ -99,6 +101,8 @@ pub struct Node {
     conf: NodeConfig,
     /// Node's process metadata read from Ziggurat configuration files.
     meta: NodeMetaData,
+    /// REST API client.
+    rest_client: Option<RestClient>,
 }
 
 impl Node {
@@ -170,11 +174,21 @@ impl Node {
 
         // Once the node is started, fetch its addresses.
         self.conf
-            .load_addrs()
+            .load_runtime_cfg()
             .await
             .expect("couldn't load the node's addresses");
 
-        Node::wait_for_start(self.conf.net_addr.unwrap()).await;
+        // Get the addresses - unwrap will always work here (ensured by the block above).
+        let rest_api_addr = self.conf.rest_api_addr.unwrap();
+        let net_addr = self.conf.net_addr.unwrap();
+
+        Node::wait_for_start(net_addr).await;
+
+        self.rest_client = Some(RestClient::new(
+            net_addr.to_string(),
+            rest_api_addr.to_string(),
+            self.conf.rest_api_auth_token.clone(),
+        ));
     }
 
     /// Stops the node instance.
@@ -215,9 +229,9 @@ impl Node {
         self.conf.net_addr
     }
 
-    /// Returns the REST API address of the node.
-    pub fn rest_api_addr(&self) -> Option<SocketAddr> {
-        self.conf.rest_api_addr
+    /// Returns the REST API client handle.
+    pub fn rest_client(&self) -> Option<&RestClient> {
+        self.rest_client.as_ref()
     }
 
     fn get_path(node_dir_idx: usize) -> io::Result<PathBuf> {
@@ -255,19 +269,18 @@ mod test {
             .expect("unable to build the node");
 
         // No addresses before the node is started.
-        assert!(node.rest_api_addr().is_none());
+        assert!(node.rest_client().is_none());
         assert!(node.net_addr().is_none());
 
         node.start().await;
         // Addresses are available once the node is started.
-        assert!(node.rest_api_addr().is_some());
+        assert!(node.rest_client().is_some());
         assert!(node.net_addr().is_some());
 
         sleep(SLEEP).await;
 
         assert!(node.stop().is_ok());
         // Addresses are deleted after the node is stopped.
-        assert!(node.rest_api_addr().is_none());
         assert!(node.net_addr().is_none());
 
         // Restart the node.

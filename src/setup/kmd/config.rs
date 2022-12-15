@@ -7,9 +7,10 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use tokio::time::{sleep, timeout, Duration};
+use tokio::time::timeout;
 
 use crate::setup::{
+    self,
     constants::LOAD_FILE_TIMEOUT_SECS,
     kmd::constants::{KMD_DIR, REST_ADDR_FILE, TOKEN_FILE},
 };
@@ -38,7 +39,7 @@ impl KmdConfig {
         timeout(LOAD_FILE_TIMEOUT_SECS, async {
             let token_path = path.join(TOKEN_FILE);
 
-            token = KmdConfig::try_read_to_string(&token_path).await;
+            token = setup::try_read_to_string(&token_path).await;
         })
         .await
         .expect("couldn't fetch the kmd's token");
@@ -57,7 +58,7 @@ impl KmdConfig {
         timeout(LOAD_FILE_TIMEOUT_SECS, async {
             let rest_addr_path = self.path.join(REST_ADDR_FILE);
 
-            rest_addr = KmdConfig::try_read_to_string(&rest_addr_path).await;
+            rest_addr = setup::try_read_to_string(&rest_addr_path).await;
         })
         .await
         .expect("couldn't fetch kmd's address");
@@ -67,20 +68,5 @@ impl KmdConfig {
                 .expect("couldn't create the REST API socket address"),
         );
         Ok(())
-    }
-
-    /// Continuously try to read a string from a file.
-    async fn try_read_to_string(file_path: &Path) -> String {
-        loop {
-            match tokio::fs::read_to_string(&file_path).await {
-                Ok(content) => return content,
-                Err(e) => {
-                    if e.kind() == tokio::io::ErrorKind::NotFound {
-                        sleep(Duration::from_millis(100)).await;
-                        continue;
-                    }
-                }
-            };
-        }
     }
 }
