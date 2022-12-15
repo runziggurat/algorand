@@ -23,14 +23,14 @@ environment variable and rerun the setup script:
     export ALGORAND_BIN_PATH="$HOME/node"   # example path
     tools/setup_env.sh
 ```
-4. Create a package of IP addresses which are required for performance tests. From the root repository directory run, e.g.:
+4. Create a package of IP addresses (4k addresses) which are required for performance tests. From the root repository directory run, e.g.:
    Under Linux (to generate dummy devices with addresses):
    ```
-   sudo python3 ./tools/ips.py --subnet 1.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth
+   sudo python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev_prefix test_zeth
    ```
    Under MacOS or Linux (to add whole subnet to loopback device - under Linux: lo, MacOS: lo0):
    ```
-   sudo python3 ./tools/ips.py --subnet 1.1.1.0/24 --file src/tools/ips.rs --dev lo0
+   sudo python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev lo0
    ```
    Read ./tools/ips.py for more details.
 5. Run tests with the following command:
@@ -67,3 +67,9 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 | [011](SPEC.md#ZG-CONFORMANCE-011) |   ✓    |                                                                             |
 | [012](SPEC.md#ZG-CONFORMANCE-012) |   -    |                                                                             |
 | [013](SPEC.md#ZG-CONFORMANCE-013) |   -    |                                                                             |
+
+### Performance
+
+|             Test Case             | Algod  | Additional Information                                                      |
+| :-------------------------------: | :----: | :-------------------------------------------------------------------------- |
+| [001](SPEC.md#ZG-PERFORMANCE-001) |   ✓    |                                                                             |

@@ -10,6 +10,7 @@ use pea2pea::{
     Config as NodeConfig, Node, Pea2Pea,
 };
 use tokio::{
+    net::TcpSocket,
     sync::mpsc::{self, Receiver},
     time::{sleep, timeout, Duration},
 };
@@ -104,6 +105,13 @@ impl SyntheticNode {
     /// If the handshake protocol is enabled it will be executed as well.
     pub async fn connect(&self, target: SocketAddr) -> io::Result<()> {
         self.inner.node().connect(target).await
+    }
+
+    /// Connects to the target address using specified source socket.
+    ///
+    /// If the handshake protocol is enabled it will be executed as well.
+    pub async fn connect_from(&self, target: SocketAddr, source: TcpSocket) -> io::Result<()> {
+        self.inner.node().connect_using_socket(target, source).await
     }
 
     /// Starts listening for inbound connections.
