@@ -174,7 +174,7 @@ impl Node {
 
         // Once the node is started, fetch its addresses.
         self.conf
-            .load_addrs()
+            .load_runtime_cfg()
             .await
             .expect("couldn't load the node's addresses");
 
