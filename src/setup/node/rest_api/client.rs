@@ -14,52 +14,65 @@ use crate::{protocol::constants::USER_AGENT, setup::node::rest_api::message::Enc
 /// Timeout time for REST requests.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
+/// [RestClient] supports all required REST API handling.
 #[derive(Default)]
-struct HttpClient {
-    client: Client,
+pub struct RestClient {
+    net_addr: String,
+    rest_addr: String,
+    token: String,
+    http_client: Client,
 }
 
-impl HttpClient {
-    async fn get_block(
-        &self,
-        rpc_addr: &str,
-        round: &str,
-    ) -> anyhow::Result<reqwest::Response, reqwest::Error> {
+impl RestClient {
+    // Restriction: only the node module can create new clients.
+    /// Creates a new [RestClient].
+    pub(in super::super) fn new(net_addr: String, rest_addr: String, token: String) -> Self {
+        Self {
+            net_addr,
+            rest_addr,
+            token,
+            http_client: reqwest::Client::new(),
+        }
+    }
+
+    async fn get_block(&self, round: &str) -> anyhow::Result<reqwest::Response, reqwest::Error> {
         // Replica of the HTTP request our synth node receives from the node.
-        self.client
-            .get(format!("http://{}/v1/private-v1/block/{}", rpc_addr, round))
-            .header(header::HOST, rpc_addr)
+        self.http_client
+            .get(format!(
+                "http://{}/v1/private-v1/block/{}",
+                self.net_addr, round
+            ))
+            .header(header::HOST, self.net_addr.clone())
             .header(header::USER_AGENT, USER_AGENT)
             .header(header::ACCEPT_ENCODING, "gzip")
             .send()
             .await
     }
-}
 
-/// Returns a block for a provided round.
-pub async fn wait_for_block(rpc_addr: &str, round: u64) -> Result<EncodedBlockCert, Elapsed> {
-    // Algod V1 documentation states that the round format is 'integer (int64)',
-    // but it's actually an int64 integer encoded in base36.
-    let round = radix_fmt::radix_36(round).to_string();
-    let client = HttpClient::default();
+    /// Returns a block for a provided round.
+    pub async fn wait_for_block(&self, round: u64) -> Result<EncodedBlockCert, Elapsed> {
+        // Algod V1 documentation states that the round format is 'integer (int64)',
+        // but it's actually an int64 integer encoded in base36.
+        let round = radix_fmt::radix_36(round).to_string();
 
-    tokio::time::timeout(REQUEST_TIMEOUT, async move {
-        loop {
-            if let Ok(rsp) = client.get_block(rpc_addr, &round).await {
-                if rsp.error_for_status_ref().is_err() {
-                    tracing::trace!("invalid status for the response {:?}", rsp);
-                    continue;
+        tokio::time::timeout(REQUEST_TIMEOUT, async move {
+            loop {
+                if let Ok(rsp) = self.get_block(&round).await {
+                    if rsp.error_for_status_ref().is_err() {
+                        tracing::trace!("invalid status for the response {:?}", rsp);
+                        continue;
+                    }
+                    tracing::info!("correct status for the response {:?}", rsp);
+
+                    let block = rmp_serde::from_slice(&rsp.bytes().await.unwrap()).unwrap();
+                    tracing::info!("block data {:?}", block);
+                    return Ok(block);
                 }
-                tracing::info!("correct status for the response {:?}", rsp);
 
-                let block = rmp_serde::from_slice(&rsp.bytes().await.unwrap()).unwrap();
-                tracing::info!("block data {:?}", block);
-                return Ok(block);
+                // On average, new blocks are generated every 4 seconds, so a long wait is fine here.
+                sleep(Duration::from_secs(1)).await;
             }
-
-            // On average, new blocks are generated every 4 seconds, so a long wait is fine here.
-            sleep(Duration::from_secs(1)).await;
-        }
-    })
-    .await?
+        })
+        .await?
+    }
 }
