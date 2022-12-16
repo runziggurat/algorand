@@ -1,15 +1,15 @@
-use std::net::SocketAddr;
-
 use tempfile::TempDir;
 
 use crate::{
     protocol::codecs::{
-        msgpack::{Address, Payment, Transaction, TransactionType},
+        msgpack::{Payment, Transaction, TransactionType},
         payload::Payload,
-        tagmsg::Tag,
     },
     setup::{kmd::Kmd, node::Node},
-    tools::synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
+    tests::conformance::post_handshake::cmd::{
+        get_handshaked_synth_node, get_pub_key_addr, get_signed_tagged_txn, get_txn_params,
+        get_wallet_token,
+    },
 };
 
 #[tokio::test]
@@ -30,38 +30,10 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         .expect("unable to build the kmd instance");
     kmd.start().await;
 
-    // TODO(Rqnsom): Move transaction creation to a function for the next test.
-    let wallets = kmd.get_wallets().await.expect("couldn't get the wallets");
-    let wallet_id = wallets
-        .wallets
-        .into_iter()
-        .find(|wallet| wallet.name == "unencrypted-default-wallet")
-        .expect("couldn't find an unencrypted default wallet")
-        .id;
-
-    let wallet_token = kmd
-        .get_wallet_handle_token(wallet_id, "".to_string())
-        .await
-        .expect("couldn't get the wallet token")
-        .wallet_handle_token;
-
-    let txn_params = node
-        .rest_client()
-        .expect("couldn't get the REST client")
-        .get_transaction_params()
-        .await
-        .expect("couldn't get the transaction parameters");
-
-    let pub_key = kmd
-        .get_keys(wallet_token.clone())
-        .await
-        .expect("couldn't get the wallet keys")
-        .addresses
-        .pop()
-        .expect("couldn't find any public keys in the wallet");
+    let wallet_token = get_wallet_token(&mut kmd).await;
 
     // Just send payment to the same address - good enough for the test.
-    let rx_addr = Address::from_string(&pub_key).expect("couldn't convert pub key to address");
+    let rx_addr = get_pub_key_addr(&mut kmd, wallet_token.clone()).await;
     let tx_addr = rx_addr;
 
     let txn_type = TransactionType::Payment(Payment {
@@ -69,6 +41,8 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         amount: 1000,
         close_remainder_to: None,
     });
+
+    let txn_params = get_txn_params(&mut node).await;
 
     let txn = Transaction {
         sender: tx_addr,
@@ -84,21 +58,16 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         rekey_to: None,
     };
 
-    let mut signed_txn = kmd
-        .sign_transaction(wallet_token, "".to_string(), &txn)
-        .await
-        .expect("couldn't sign the transaction")
-        .signed_transaction;
-    let mut tagged_msg = Tag::get_tag_str(&Tag::Txn).as_bytes().to_vec();
-    tagged_msg.append(&mut signed_txn);
+    let signed_tagged_txn = get_signed_tagged_txn(&mut kmd, wallet_token, &txn).await;
 
     let net_addr = node.net_addr().expect("network address not found");
 
+    // Create synthetic nodes.
     let synthetic_node_tx = get_handshaked_synth_node(net_addr).await;
     let mut synthetic_node_rx = get_handshaked_synth_node(net_addr).await;
 
     // Send a signed transaction.
-    let signed_tagged_txn = Payload::RawBytes(tagged_msg);
+    let signed_tagged_txn = Payload::RawBytes(signed_tagged_txn);
     assert!(synthetic_node_tx
         .unicast(net_addr, signed_tagged_txn)
         .is_ok());
@@ -114,20 +83,4 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     synthetic_node_tx.shut_down().await;
     kmd.stop().expect("unable to stop the kmd instance");
     node.stop().expect("unable to stop the node");
-}
-
-async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
-    // Create a synthetic node and enable handshaking.
-    let synthetic_node = SyntheticNodeBuilder::default()
-        .build()
-        .await
-        .expect("unable to build a synthetic node");
-
-    // Connect to the node and initiate the handshake.
-    synthetic_node
-        .connect(net_addr)
-        .await
-        .expect("unable to connect");
-
-    synthetic_node
 }
