@@ -4,9 +4,10 @@
 //! - [V1](https://developer.algorand.org/docs/rest-apis/algod/v1/) - which is deprecated but still used by the node.
 //! - [V2](https://developer.algorand.org/docs/rest-apis/algod/v2/)
 
-use serde::{Deserialize, Serialize};
+use data_encoding::BASE64;
+use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::protocol::codecs::msgpack::{Ed25519Seed, HashDigest};
+use crate::protocol::codecs::msgpack::{Ed25519Seed, HashDigest, Round};
 
 /// [EncodedBlockCert] defines how get-block response encodes a block and its certificate.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -107,4 +108,47 @@ pub struct BlockHeaderMsgPack {
     /// Root of transaction vector commitment merkle tree using SHA256 hash function.
     #[serde(default, rename = "txn256")]
     pub tx_merke_root_hash256: Option<HashDigest>,
+}
+
+/// TransactionParams contains the parameters that help a client construct a new transaction.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TransactionParams {
+    /// Transaction fee in units of micro-Algos per byte.
+    pub fee: u64,
+
+    /// Minimum fee.
+    #[serde(rename = "min-fee")]
+    pub min_fee: u64,
+
+    /// Genesis ID.
+    #[serde(rename = "genesis-id")]
+    pub genesis_id: String,
+
+    /// Genesis hash.
+    #[serde(
+        rename = "genesis-hash",
+        deserialize_with = "deserialize_hash_in_base64"
+    )]
+    pub genesis_hash: HashDigest,
+
+    /// The last round seen.
+    #[serde(rename = "last-round")]
+    pub last_round: Round,
+
+    /// The consensus protocol version as of last round.
+    #[serde(rename = "consensus-version")]
+    pub consensus_version: String,
+}
+
+fn deserialize_hash_in_base64<'de, D>(deserializer: D) -> Result<HashDigest, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let mut hash = [0; 32];
+    hash.copy_from_slice(
+        &BASE64
+            .decode(<&str>::deserialize(deserializer)?.as_bytes())
+            .unwrap(),
+    );
+    Ok(HashDigest(hash))
 }
