@@ -6,7 +6,7 @@ use std::{
 };
 
 use data_encoding::{BASE32_NOPAD, BASE64};
-use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de::Visitor, ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 
 /// Period of time.
@@ -249,12 +249,12 @@ pub struct AgreementVote {
     pub sig: OneTimeSignature,
 }
 /// Wraps a transaction in a signature.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SignedTransaction {
-    #[serde(default, skip_serializing_if = "is_default")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sig: Option<Ed25519Signature>,
 
-    #[serde(rename = "msig", default, skip_serializing_if = "is_default")]
+    #[serde(rename = "msig", default, skip_serializing_if = "Option::is_none")]
     pub multisig: Option<MultisigSignature>,
 
     #[serde(rename = "txn")]
@@ -262,7 +262,7 @@ pub struct SignedTransaction {
 }
 
 /// A transaction that can appear in a block.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Transaction {
     /// Paid by the sender to the FeeSink to prevent denial-of-service. The minimum fee on Algorand
     /// is currently 1000 microAlgos.
@@ -326,7 +326,7 @@ pub struct Transaction {
 }
 
 /// Enum containing the types of transactions and their specific fields.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum TransactionType {
     /// Payment transaction.
@@ -336,7 +336,7 @@ pub enum TransactionType {
 }
 
 /// Fields for a payment transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Payment {
     /// The address of the account that receives the amount.
     #[serde(rename = "rcv")]
@@ -499,6 +499,20 @@ pub struct MultisigSignature {
     pub version: u8,
 }
 
+impl Serialize for MultisigSignature {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(Some(3))?;
+
+        state.serialize_entry("subsig", &self.subsigs)?;
+        state.serialize_entry("thr", &self.threshold)?;
+        state.serialize_entry("v", &self.version)?;
+        state.end()
+    }
+}
+
 /// A MultisigSubsig.
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize)]
 pub struct MultisigSubsig {
@@ -507,6 +521,22 @@ pub struct MultisigSubsig {
 
     #[serde(rename = "s")]
     pub sig: Option<Ed25519Signature>,
+}
+
+impl Serialize for MultisigSubsig {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let len = if self.sig.is_some() { 2 } else { 1 };
+        let mut state = serializer.serialize_map(Some(len))?;
+
+        state.serialize_entry("pk", &self.key)?;
+        if let Some(sig) = &self.sig {
+            state.serialize_entry("s", sig)?;
+        }
+        state.end()
+    }
 }
 
 /// An Ed25519PublicKey.

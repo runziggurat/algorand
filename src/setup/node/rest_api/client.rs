@@ -9,7 +9,12 @@ use std::time::Duration;
 use reqwest::{header, Client};
 use tokio::time::{error::Elapsed, sleep};
 
-use crate::{protocol::constants::USER_AGENT, setup::node::rest_api::message::EncodedBlockCert};
+use crate::{
+    protocol::constants::USER_AGENT,
+    setup::node::rest_api::message::{EncodedBlockCert, TransactionParams},
+};
+
+const API_HEADER_TOKEN: &str = "X-Algo-API-Token";
 
 /// Timeout time for REST requests.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
@@ -74,5 +79,18 @@ impl RestClient {
             }
         })
         .await?
+    }
+
+    /// Gets parameters for constructing a new transaction.
+    pub async fn get_transaction_params(&self) -> anyhow::Result<TransactionParams> {
+        self.http_client
+            .get(&format!("http://{}/v2/transactions/params", self.rest_addr))
+            .header(API_HEADER_TOKEN, &self.token)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("couldn't get the transaction parameters: {e}"))
     }
 }

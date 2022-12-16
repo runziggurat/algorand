@@ -28,6 +28,7 @@ pub enum Payload {
     NetPrioResponse(NetPrioResponse),
     MsgDigestSkip(HashDigest),
     Transaction(SignedTransaction),
+    RawBytes(Vec<u8>),
     NotImplemented,
 }
 
@@ -124,6 +125,7 @@ impl Encoder<Payload> for PayloadCodec {
                 .map_err(|_| invalid_data!("couldn't encode an agreement vote message"))?,
             Payload::MsgDigestSkip(hash) => hash.0.to_vec(),
             Payload::Ping(ping) => ping.nonce.to_vec(),
+            Payload::RawBytes(data) => data.to_vec(),
             _ => unimplemented!(),
         };
 

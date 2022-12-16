@@ -28,6 +28,9 @@ pub enum Tag {
     UniCatchupReq,
     UniEnsBlockReq,
     VoteBundle,
+
+    /// Below tag is not part of the official go-algorand SPEC.
+    RawBytes,
 }
 
 impl Tag {
@@ -47,6 +50,7 @@ impl Tag {
             Self::UniCatchupReq => "UC",
             Self::UniEnsBlockReq => "UE",
             Self::VoteBundle => "VB",
+            Self::RawBytes => "",
         }
     }
 }
@@ -100,6 +104,7 @@ impl From<&Payload> for Tag {
             Payload::NetPrioResponse(_) => Self::NetPrioResponse,
             Payload::MsgDigestSkip(_) => Self::MsgDigestSkip,
             Payload::Transaction(_) => Self::Txn,
+            Payload::RawBytes(_) => Self::RawBytes,
             Payload::NotImplemented => Self::UnknownMsg,
         }
     }
