@@ -1,6 +1,7 @@
 //! Message pack deserializer for algod messages.
 
 use std::{
+    convert::From,
     fmt::{self, Debug, Display, Formatter},
     str,
 };
@@ -289,7 +290,7 @@ pub struct Transaction {
 
     /// The human-readable string that identifies the network for the transaction. The genesis ID is
     /// found in the genesis block.
-    #[serde(rename = "gen")]
+    #[serde(default, rename = "gen")]
     pub genesis_id: String,
 
     /// The group specifies that the transaction is part of a group and, if so, specifies the hash of
@@ -311,7 +312,7 @@ pub struct Transaction {
     #[serde(rename = "lx", default)]
     pub lease: Option<HashDigest>,
 
-    /// Any data up to 1000 bytes.
+    /// Any data up to 1024 bytes.
     #[serde(with = "serde_bytes", default)]
     pub note: Vec<u8>,
 
@@ -441,6 +442,15 @@ impl Display for HashDigest {
 impl Debug for HashDigest {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", BASE32_NOPAD.encode(&self.0))
+    }
+}
+
+impl From<&Vec<u8>> for HashDigest {
+    fn from(data: &Vec<u8>) -> Self {
+        let hashed = sha2::Sha512_256::digest(data);
+        let mut hash = [0; 32];
+        hash.copy_from_slice(&hashed);
+        HashDigest(hash)
     }
 }
 
