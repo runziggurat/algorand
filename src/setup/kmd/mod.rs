@@ -19,19 +19,23 @@ use tokio::{
     time::{sleep, Duration},
 };
 
-use crate::setup::{
-    constants::ALGORAND_SETUP_DIR,
-    get_algorand_work_path,
-    kmd::{
-        config::KmdConfig,
-        constants::{CONNECTION_TIMEOUT, REST_ADDR_FILE},
-        rest_api::{
-            client::ClientV1,
-            message::{InitWalletHandleResponse, ListWalletsResponse},
+use self::rest_api::message::{ListKeysResponse, SignTransactionResponse};
+use crate::{
+    protocol::codecs::msgpack::Transaction,
+    setup::{
+        constants::ALGORAND_SETUP_DIR,
+        get_algorand_work_path,
+        kmd::{
+            config::KmdConfig,
+            constants::{CONNECTION_TIMEOUT, REST_ADDR_FILE},
+            rest_api::{
+                client::ClientV1,
+                message::{InitWalletHandleResponse, ListWalletsResponse},
+            },
         },
+        node::ChildExitCode,
+        node_meta_data::NodeMetaData,
     },
-    node::ChildExitCode,
-    node_meta_data::NodeMetaData,
 };
 
 pub struct KmdBuilder {
@@ -127,7 +131,7 @@ impl Kmd {
         Kmd::wait_for_start(rest_api_addr).await;
 
         self.rest_client = Some(ClientV1::new(
-            &rest_api_addr.to_string(),
+            rest_api_addr.to_string(),
             self.conf.token.clone(),
         ));
     }
@@ -179,6 +183,34 @@ impl Kmd {
         if let Some(rest_client) = &self.rest_client {
             return rest_client
                 .get_wallet_handle_token(wallet_id, wallet_password)
+                .await;
+        }
+
+        Err(anyhow!("the kmd instance is not started"))
+    }
+
+    /// Get the list of public keys in the wallet.
+    pub async fn get_keys(
+        &mut self,
+        wallet_handle_token: String,
+    ) -> anyhow::Result<ListKeysResponse> {
+        if let Some(rest_client) = &self.rest_client {
+            return rest_client.get_keys(wallet_handle_token).await;
+        }
+
+        Err(anyhow!("the kmd instance is not started"))
+    }
+
+    /// Sign a transaction.
+    pub async fn sign_transaction(
+        &self,
+        wallet_handle_token: String,
+        wallet_password: String,
+        transaction: &Transaction,
+    ) -> anyhow::Result<SignTransactionResponse> {
+        if let Some(rest_client) = &self.rest_client {
+            return rest_client
+                .sign_transaction(wallet_handle_token, wallet_password, transaction)
                 .await;
         }
 
