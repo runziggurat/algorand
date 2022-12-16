@@ -92,7 +92,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`                            |
 | UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`                            |
 | TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`                            |
-| TxnTag                     | WS data (Tag: TX)     | ❌       |                                   |
+| TxnTag                     | WS data (Tag: TX)     | ✅       | `C012`                            |
 | VoteBundleTag              | WS data (Tag: VB)     | ❌       |                                   |
 
 _TODO: Investigate more REST API calls and possibly include above._
@@ -204,7 +204,15 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-CONFORMANCE-012
 
-    Reserved
+    One synthetic node sends a transcation to the node.
+    The node then broadcasts that transcation to all other nodes.
+    Another synthetic node receives the broadcasted transcation.
+
+    <>
+    -> Txn
+    << Txn
+
+    Assert: the node successfully broadcasts the transaction.
 
 ### ZG-CONFORMANCE-013
 
@@ -214,7 +222,7 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     Reserved
 
-## Performance 
+## Performance
 
 ### ZG-PERFORMANCE-001
 
@@ -225,4 +233,5 @@ _TODO: Investigate more REST API calls and possibly include above._
         -> UniEnsBlockReq
         <- TopicMsgResp
 
-    Results should be introspected manually to check node's health and responsiveness (latency, throughput) when requesting block data. 
+    Results should be introspected manually to check the node's health and responsiveness
+    (latency, throughput) when requesting block data.

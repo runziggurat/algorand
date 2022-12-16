@@ -1,12 +1,21 @@
+use std::net::SocketAddr;
+
 use tempfile::TempDir;
 
-use crate::setup::{kmd::Kmd, node::Node};
+use crate::{
+    protocol::codecs::{
+        msgpack::{Address, Payment, Transaction, TransactionType},
+        payload::Payload,
+        tagmsg::Tag,
+    },
+    setup::{kmd::Kmd, node::Node},
+    tools::synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
+};
 
 #[tokio::test]
 #[allow(non_snake_case)]
 async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     // ZG-CONFORMANCE-012
-    // TODO: write a description in the SPEC doc (once all is done here)
 
     // Spin up a node instance.
     let target = TempDir::new().expect("couldn't create a temporary directory");
@@ -21,6 +30,7 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         .expect("unable to build the kmd instance");
     kmd.start().await;
 
+    // TODO(Rqnsom): Move transaction creation to a function for the next test.
     let wallets = kmd.get_wallets().await.expect("couldn't get the wallets");
     let wallet_id = wallets
         .wallets
@@ -29,22 +39,95 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
         .expect("couldn't find an unencrypted default wallet")
         .id;
 
-    let init_wallet_rsp = kmd.get_wallet_handle_token(wallet_id, "".to_string()).await;
-    println!(
-        "a temporary log with init_wallet_rsp: {:?}",
-        init_wallet_rsp
+    let wallet_token = kmd
+        .get_wallet_handle_token(wallet_id, "".to_string())
+        .await
+        .expect("couldn't get the wallet token")
+        .wallet_handle_token;
+
+    let txn_params = node
+        .rest_client()
+        .expect("couldn't get the REST client")
+        .get_transaction_params()
+        .await
+        .expect("couldn't get the transaction parameters");
+
+    let pub_key = kmd
+        .get_keys(wallet_token.clone())
+        .await
+        .expect("couldn't get the wallet keys")
+        .addresses
+        .pop()
+        .expect("couldn't find any public keys in the wallet");
+
+    // Just send payment to the same address - good enough for the test.
+    let rx_addr = Address::from_string(&pub_key).expect("couldn't convert pub key to address");
+    let tx_addr = rx_addr;
+
+    let txn_type = TransactionType::Payment(Payment {
+        receiver: rx_addr,
+        amount: 1000,
+        close_remainder_to: None,
+    });
+
+    let txn = Transaction {
+        sender: tx_addr,
+        fee: txn_params.min_fee,
+        first_valid: txn_params.last_round,
+        last_valid: txn_params.last_round + 1000,
+        note: Vec::new(),
+        genesis_id: txn_params.genesis_id,
+        genesis_hash: txn_params.genesis_hash,
+        group: None,
+        lease: None,
+        txn_type,
+        rekey_to: None,
+    };
+
+    let mut signed_txn = kmd
+        .sign_transaction(wallet_token, "".to_string(), &txn)
+        .await
+        .expect("couldn't sign the transaction")
+        .signed_transaction;
+    let mut tagged_msg = Tag::get_tag_str(&Tag::Txn).as_bytes().to_vec();
+    tagged_msg.append(&mut signed_txn);
+
+    let net_addr = node.net_addr().expect("network address not found");
+
+    let synthetic_node_tx = get_handshaked_synth_node(net_addr).await;
+    let mut synthetic_node_rx = get_handshaked_synth_node(net_addr).await;
+
+    // Send a signed transaction.
+    let signed_tagged_txn = Payload::RawBytes(tagged_msg);
+    assert!(synthetic_node_tx
+        .unicast(net_addr, signed_tagged_txn)
+        .is_ok());
+
+    let check = |m: &Payload| matches!(&m, Payload::Transaction(_));
+    assert!(
+        synthetic_node_rx.expect_message(&check).await,
+        "a broadcasted transaction is missing"
     );
 
-    // TODO(Rqnsom):
-    // 1. add two synthetic_node nodes
-    // 2. prepare a transaction via kmd V1 REST API (ongoing...)
-    // 3. the synthetic_node_tx node submits a txn to the node
-    // 4. the synthetic_node_rx node expects that same txn from the node
-
-    // temp solution to check all is running well (manual check).
-    tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
-
     // Gracefully shut down the nodes.
+    synthetic_node_rx.shut_down().await;
+    synthetic_node_tx.shut_down().await;
     kmd.stop().expect("unable to stop the kmd instance");
     node.stop().expect("unable to stop the node");
+}
+
+async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
+    // Create a synthetic node and enable handshaking.
+    let synthetic_node = SyntheticNodeBuilder::default()
+        .build()
+        .await
+        .expect("unable to build a synthetic node");
+
+    // Connect to the node and initiate the handshake.
+    synthetic_node
+        .connect(net_addr)
+        .await
+        .expect("unable to connect");
+
+    synthetic_node
 }
