@@ -235,3 +235,28 @@ _TODO: Investigate more REST API calls and possibly include above._
 
     Results should be introspected manually to check the node's health and responsiveness
     (latency, throughput) when requesting block data.
+
+## Resistance
+
+### ZG-RESISTANCE-001
+
+    Reserved (send random bytes before the handshake)
+
+### ZG-RESISTANCE-002
+
+    Node rejects the handshake in case the request handshake message contains invalid data.
+
+    ->
+    -> http handshake request (with an invalid data)
+    <- http handshake response (with a reject reason)
+
+    Assert: the node rejects all invalid handshake requests.
+
+### ZG-RESISTANCE-003
+
+    Reserved
+
+### ZG-RESISTANCE-004
+
+    Reserved
+

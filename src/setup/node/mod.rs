@@ -31,6 +31,7 @@ use crate::setup::{
     node_meta_data::NodeMetaData,
 };
 
+#[derive(Debug, PartialEq)]
 pub enum ChildExitCode {
     Success,
     ErrorCode(Option<i32>),
