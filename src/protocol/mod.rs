@@ -2,7 +2,7 @@
 
 pub mod codecs;
 pub mod constants;
-mod handshake;
+pub mod handshake;
 mod reading;
 mod writing;
 

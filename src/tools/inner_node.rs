@@ -3,12 +3,12 @@ use std::net::SocketAddr;
 use pea2pea::{Node, Pea2Pea};
 use tokio::sync::mpsc::Sender;
 
-use crate::protocol::codecs::payload::Payload;
+use crate::protocol::{codecs::payload::Payload, handshake::HandshakeCfg};
 
 #[derive(Clone)]
 pub struct InnerNode {
     node: Node,
-    pub challenge: Option<String>,
+    pub handshake_cfg: HandshakeCfg,
     pub inbound_tx: Sender<(SocketAddr, Payload)>,
 }
 
@@ -16,12 +16,12 @@ impl InnerNode {
     pub async fn new(
         node: Node,
         tx: Sender<(SocketAddr, Payload)>,
-        challenge: Option<String>,
+        handshake_cfg: HandshakeCfg,
     ) -> Self {
         Self {
             node,
             inbound_tx: tx,
-            challenge,
+            handshake_cfg,
         }
     }
 }

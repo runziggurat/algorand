@@ -17,7 +17,7 @@ use tokio::{
 use tracing::trace;
 
 use crate::{
-    protocol::codecs::payload::Payload,
+    protocol::{codecs::payload::Payload, handshake::HandshakeCfg},
     tools::{constants::EXPECT_MSG_TIMEOUT, inner_node::InnerNode},
 };
 
@@ -39,7 +39,7 @@ pub struct SyntheticNodeBuilder {
     /// Whether or not to call `enable_handshake` when creating a new node.
     handshake: bool,
     /// Network priority challenge sent to clients which try to connect to the node.
-    challenge: Option<String>,
+    handshake_cfg: HandshakeCfg,
 }
 
 impl Default for SyntheticNodeBuilder {
@@ -50,7 +50,7 @@ impl Default for SyntheticNodeBuilder {
                 ..Default::default()
             },
             handshake: true,
-            challenge: None,
+            handshake_cfg: Default::default(),
         }
     }
 }
@@ -64,7 +64,7 @@ impl SyntheticNodeBuilder {
         // Inbound channel size of 100 messages.
         let (tx, rx) = mpsc::channel(100);
 
-        let inner_node = InnerNode::new(node, tx, self.challenge.clone()).await;
+        let inner_node = InnerNode::new(node, tx, self.handshake_cfg.clone()).await;
 
         // Enable the handshake protocol.
         if self.handshake {
@@ -86,9 +86,9 @@ impl SyntheticNodeBuilder {
         self
     }
 
-    /// Choose whether or not the node should include priority challenge inside the accepted handshake responses.
-    pub fn with_priority_challenge(mut self, challenge: String) -> Self {
-        self.challenge = Some(challenge);
+    /// Choose the handshake configuration.
+    pub fn with_handshake_configuration(mut self, cfg: HandshakeCfg) -> Self {
+        self.handshake_cfg = cfg;
         self
     }
 }

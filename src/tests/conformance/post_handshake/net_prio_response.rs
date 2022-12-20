@@ -2,9 +2,12 @@ use data_encoding::BASE64;
 use tempfile::TempDir;
 
 use crate::{
-    protocol::codecs::{
-        msgpack::{NetPrioResponse, Response},
-        payload::Payload,
+    protocol::{
+        codecs::{
+            msgpack::{NetPrioResponse, Response},
+            payload::Payload,
+        },
+        handshake::HandshakeCfg,
     },
     setup::node::Node,
     tools::synthetic_node::SyntheticNodeBuilder,
@@ -18,9 +21,14 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
     // A simple non-random challenge.
     let challenge = BASE64.encode(&[1u8; 32]);
 
+    let cfg = HandshakeCfg {
+        challenge: Some(challenge.clone()),
+        ..Default::default()
+    };
+
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
-        .with_priority_challenge(challenge.clone())
+        .with_handshake_configuration(cfg)
         .build()
         .await
         .expect("unable to build a synthetic node");
