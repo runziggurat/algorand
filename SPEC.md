@@ -236,6 +236,24 @@ _TODO: Investigate more REST API calls and possibly include above._
     Results should be introspected manually to check the node's health and responsiveness
     (latency, throughput) when requesting block data.
 
+### ZG-PERFORMANCE-002
+
+    The node behaves as expected under load when some peers are sending higher priority messages and some other peer 
+    is trying to request blocks with certificates (that are lower priority messages).
+
+    Normal peer:
+    <>
+    In loop:
+        -> UniEnsBlockReq
+        <- TopicMsgResp
+
+    High priority peers (potential malicious ones):
+        <>
+    In loop:
+        -> MsgOfInterest
+
+    Results should be introspected manually to check the normal peer responsiveness (latency, throughput) when requesting block data.
+
 ## Resistance
 
 ### ZG-RESISTANCE-001
