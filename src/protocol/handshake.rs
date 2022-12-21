@@ -8,11 +8,11 @@ use tracing::*;
 
 use crate::{protocol::constants::USER_AGENT, tools::inner_node::InnerNode};
 
+pub const X_AG_ALGORAND_VERSION: &str = "2.1";
+pub const X_AG_ACCEPT_VERSION: &str = X_AG_ALGORAND_VERSION;
 const SEC_WEBSOCKET_VERSION: &str = "13";
 const X_AG_INSTANCE_NAME: &str = "synth_node"; // Can be shared between different synthetic nodes
 const X_AG_NODE_RANDOM: &str = "cGVhMnBlYQ=="; // Can be shared between different synthetic nodes
-const X_AG_ALGORAND_VERSION: &str = "2.1";
-const X_AG_ACCEPT_VERSION: &str = X_AG_ALGORAND_VERSION;
 const X_AG_ALGORAND_GENESIS: &str = "private-v1";
 
 // Info from RFC 6455, section 4.1, page 18:
@@ -38,7 +38,7 @@ pub struct SecWebSocket {
 
 impl SecWebSocket {
     /// Generate key-accept pair for a WebSocket handshake.
-    fn generate() -> Self {
+    pub fn generate() -> Self {
         let key = tungstenite::handshake::client::generate_key();
         let accept = tungstenite::handshake::derive_accept_key(key.as_bytes());
         Self { key, accept }
