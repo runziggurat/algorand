@@ -71,9 +71,9 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 ### Performance
 
 |             Test Case             | Algod  | Additional Information                                                      |
-| :-------------------------------: | :----: | :-------------------------------------------------------------------------- |
+|:---------------------------------:| :----: | :-------------------------------------------------------------------------- |
 | [001](SPEC.md#ZG-PERFORMANCE-001) |   ✓    |                                                                             |
-
+| [002](SPEC.md#ZG-PERFORMANCE-002) |   ✓    |                                                                             |
 ### Resistance
 
 |             Test Case             | Algod  | Additional Information                                                      |
