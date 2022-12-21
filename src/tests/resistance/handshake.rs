@@ -1,7 +1,10 @@
 use tempfile::TempDir;
 
 use crate::{
-    protocol::{codecs::payload::Payload, handshake::HandshakeCfg},
+    protocol::{
+        codecs::payload::Payload,
+        handshake::{HandshakeCfg, SecWebSocket, X_AG_ACCEPT_VERSION, X_AG_ALGORAND_VERSION},
+    },
     setup::node::{ChildExitCode, Node},
     tools::synthetic_node::SyntheticNodeBuilder,
 };
@@ -210,5 +213,187 @@ async fn r001_t5_HANDSHAKE_ws_version() {
 
     // Send an empty field.
     let cfg = gen_cfg_huge(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn r001_t6_HANDSHAKE_tel_id() {
+    // ZG-RESISTANCE-001
+
+    let gen_cfg = |len| HandshakeCfg {
+        ar_tel_id: Some(gen_huge_string(len)),
+        ..Default::default()
+    };
+
+    // Valid scenarios:
+
+    // Find the largest instance value which the node can accept.
+    let cfg = gen_cfg(WS_HTTP_HEADER_MAX_SIZE);
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Send an empty field.
+    let cfg = gen_cfg(0);
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Below tests assert the connection shouldn't be established.
+
+    // Use a huge value which the node will reject.
+    let cfg = gen_cfg(WS_HTTP_HEADER_INVALID_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn r001_t7_HANDSHAKE_ws_key() {
+    // ZG-RESISTANCE-001
+
+    let gen_cfg = |len| -> HandshakeCfg {
+        let mut ws_key = SecWebSocket::generate();
+        ws_key.key = gen_huge_string(len);
+
+        HandshakeCfg {
+            ws_key: Some(ws_key),
+            ..Default::default()
+        }
+    };
+
+    // Below tests assert the connection shouldn't be established.
+
+    // Find the largest instance value which the node can accept.
+    let cfg = gen_cfg(WS_HTTP_HEADER_MAX_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Send an empty field.
+    let cfg = gen_cfg(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Use a huge value which the node will reject.
+    let cfg = gen_cfg(WS_HTTP_HEADER_INVALID_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn r001_t8_HANDSHAKE_location() {
+    // ZG-RESISTANCE-001
+
+    let gen_cfg = |len| HandshakeCfg {
+        ar_location: Some(gen_huge_string(len)),
+        ..Default::default()
+    };
+
+    // Below tests assert the connection shouldn't be established.
+
+    // NOTE: The node should reject an invalid address.
+    //// Find the largest instance value which the node can accept.
+    //let cfg = gen_cfg(WS_HTTP_HEADER_MAX_SIZE);
+    //assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // NOTE: The node should reject an invalid address.
+    //// Send an empty field.
+    //let cfg = gen_cfg(0);
+    //assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Use a huge value which the node will reject.
+    let cfg = gen_cfg(WS_HTTP_HEADER_INVALID_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn r001_t9_HANDSHAKE_version() {
+    // ZG-RESISTANCE-001
+
+    let gen_cfg_huge = |len| HandshakeCfg {
+        ar_version: gen_huge_string(len),
+        ar_accept_version: "".into(),
+        ..Default::default()
+    };
+    let gen_cfg_with = |version, accept_version| HandshakeCfg {
+        ar_version: version,
+        ar_accept_version: accept_version,
+        ..Default::default()
+    };
+
+    // Valid scenarios:
+
+    // Missing ar_accept_version with version 2.1.
+    let cfg = gen_cfg_with(X_AG_ALGORAND_VERSION.into(), String::new());
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Missing ar_accept_version with version 2.2.
+    let cfg = gen_cfg_with("2.2".into(), String::new());
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Below tests assert the connection shouldn't be established.
+
+    // Missing ar_accept_version with invalid version.
+    let cfg = gen_cfg_with("2.3".into(), String::new());
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Missing ar_accept_version with invalid version.
+    let cfg = gen_cfg_with("2.0".into(), String::new());
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Find the largest instance value which the node can accept.
+    let cfg = gen_cfg_huge(WS_HTTP_HEADER_MAX_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Send an empty field.
+    let cfg = gen_cfg_huge(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Use a huge value which the node will reject.
+    let cfg = gen_cfg_huge(WS_HTTP_HEADER_INVALID_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+}
+
+#[tokio::test]
+#[allow(non_snake_case)]
+async fn r001_t10_HANDSHAKE_accept_version() {
+    // ZG-RESISTANCE-001
+
+    let gen_cfg_huge = |len| HandshakeCfg {
+        ar_accept_version: gen_huge_string(len),
+        ar_version: "".into(),
+        ..Default::default()
+    };
+    let gen_cfg_with = |version, accept_version| HandshakeCfg {
+        ar_version: version,
+        ar_accept_version: accept_version,
+        ..Default::default()
+    };
+
+    // Valid scenarios:
+
+    // Missing ar_version with version 2.1.
+    let cfg = gen_cfg_with(String::new(), X_AG_ACCEPT_VERSION.into());
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Missing ar_version with version 2.2.
+    let cfg = gen_cfg_with(String::new(), "2.2".into());
+    assert!(run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Below tests assert the connection shouldn't be established.
+
+    // Missing ar_accept_version with invalid version.
+    let cfg = gen_cfg_with(String::new(), "2.3".into());
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Missing ar_accept_version with invalid version.
+    let cfg = gen_cfg_with(String::new(), "2.0".into());
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Find the largest instance value which the node can accept.
+    let cfg = gen_cfg_huge(WS_HTTP_HEADER_MAX_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Send an empty field.
+    let cfg = gen_cfg_huge(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // Use a huge value which the node will reject.
+    let cfg = gen_cfg_huge(WS_HTTP_HEADER_INVALID_SIZE);
     assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
 }
