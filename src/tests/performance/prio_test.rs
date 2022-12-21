@@ -20,6 +20,11 @@ use crate::{
     },
     setup::node::Node,
     tools::{
+        constants::{
+            ERR_BIND_TO_SOCKET_FAILED, ERR_NET_ADDR_NOT_FOUND, ERR_NODE_BUILD_FAILED,
+            ERR_NODE_CONNECTION_FAILED, ERR_NODE_UNABLE_TO_STOP, ERR_SEND_MESSAGE_FAILED,
+            ERR_SYNTH_NODE_BUILD_FAILED, ERR_TEMPDIR_CREATION_FAILED,
+        },
         ips::IPS,
         metrics::{
             recorder::TestMetrics,
@@ -36,10 +41,10 @@ pub struct RequestsTable {
 
 #[derive(Tabled, Default, Debug, Clone)]
 pub struct RequestStats {
-    #[tabled(rename = " peers ")]
-    peers: u16,
-    #[tabled(rename = " malicious peers ")]
-    mpeers: u16,
+    #[tabled(rename = " low-prio peers ")]
+    low_prio_peers: u16,
+    #[tabled(rename = " high-prio peers ")]
+    high_prio_peers: u16,
     #[tabled(rename = " requests ")]
     requests: u16,
     #[tabled(rename = " min (ms) ")]
@@ -57,15 +62,22 @@ pub struct RequestStats {
 }
 
 impl RequestStats {
-    pub fn new(peers: u16, mpeers: u16, requests: u16, latencies: Histogram, time: f64) -> Self {
+    pub fn new(
+        lprio_peers: u16,
+        hprio_peers: u16,
+        requests: u16,
+        latency: Histogram,
+        time: f64,
+    ) -> Self {
         Self {
-            peers,
-            mpeers,
+            low_prio_peers: lprio_peers,
+            high_prio_peers: hprio_peers,
             requests,
-            completion: (latencies.entries() as f64) / (peers as f64 * requests as f64) * 100.00,
-            latency_min: latencies.minimum().unwrap() as u16,
-            latency_max: latencies.maximum().unwrap() as u16,
-            latency_std_dev: latencies.stddev().unwrap() as u16,
+            completion: (latency.entries() as f64) / (lprio_peers as f64 * requests as f64)
+                * 100.00,
+            latency_min: latency.minimum().unwrap() as u16,
+            latency_max: latency.maximum().unwrap() as u16,
+            latency_std_dev: latency.stddev().unwrap() as u16,
             time,
         }
     }
@@ -100,44 +112,47 @@ async fn p002_t1_PRIO_MSG_latency() {
     // the node under test.
     //
     // Sample results:
-    // ┌─────────┬───────────────────┬────────────┬────────────┬────────────┬────────────────┬────────────────┬────────────┐
-    // │  peers  │  malicious peers  │  requests  │  min (ms)  │  max (ms)  │  std dev (ms)  │  completion %  │  time (s)  │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │                 1 │        300 │          1 │          1 │              0 │         100.00 │       0.41 │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │                50 │        300 │          1 │          2 │              1 │         100.00 │       0.51 │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │               100 │        300 │          1 │          3 │              1 │         100.00 │       0.64 │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │               200 │        300 │          1 │          5 │              1 │         100.00 │       0.62 │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │               300 │        300 │          1 │         14 │              2 │         100.00 │       0.80 │
-    // ├─────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │       1 │               400 │        300 │          1 │          9 │              1 │         100.00 │       0.82 │
-    // └─────────┴───────────────────┴────────────┴────────────┴────────────┴────────────────┴────────────────┴────────────┘
+    // ┌──────────────────┬───────────────────┬────────────┬────────────┬────────────┬────────────────┬────────────────┬────────────┐
+    // │  low-prio peers  │  high-prio peers  │  requests  │  min (ms)  │  max (ms)  │  std dev (ms)  │  completion %  │  time (s)  │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │                 1 │        300 │          1 │          2 │              1 │         100.00 │       0.46 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │                50 │        300 │          1 │          2 │              1 │         100.00 │       0.48 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │               100 │        300 │          1 │          3 │              1 │         100.00 │       0.53 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │               200 │        300 │          1 │          3 │              1 │         100.00 │       0.55 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │               300 │        300 │          1 │          5 │              1 │         100.00 │       0.75 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │               400 │        300 │          1 │          4 │              1 │         100.00 │       0.76 │
+    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+    // │                1 │               799 │        300 │          1 │          7 │              1 │         100.00 │       0.78 │
+    // └──────────────────┴───────────────────┴────────────┴────────────┴────────────┴────────────────┴────────────────┴────────────┘
     // *NOTE* run with `cargo test --release  tests::performance::prio -- --nocapture`
     // Before running test generate dummy devices with different ips using toos/ips.py
 
-    let synth_counts = vec![1, 50, 100, 200, 300, 400];
+    let h_prio_peers = vec![1, 50, 100, 200, 300, 400, 799];
+    let l_prio_peers = 1;
 
     let mut table = RequestsTable::default();
 
-    for synth_count in synth_counts {
+    for hp_peer_iter_cnt in h_prio_peers {
         // synth_count malicious tasks plus one normal synth_node
-        let barrier = Arc::new(Barrier::new(synth_count + 1));
+        let barrier = Arc::new(Barrier::new(hp_peer_iter_cnt + 1));
 
-        let target = TempDir::new().expect("couldn't create a temporary directory");
+        let target = TempDir::new().expect(ERR_TEMPDIR_CREATION_FAILED);
         let mut node = Node::builder()
             .build(target.path())
-            .expect("unable to build the node");
+            .expect(ERR_NODE_BUILD_FAILED);
         node.start().await;
 
-        let node_addr = node.net_addr().expect("network address not found");
+        let node_addr = node.net_addr().expect(ERR_NET_ADDR_NOT_FOUND);
 
-        let mut synth_sockets = Vec::with_capacity(synth_count + 1);
+        let mut synth_sockets = Vec::with_capacity(hp_peer_iter_cnt + 1);
         let mut ips = IPS.to_vec();
 
-        for _ in 0..synth_count + 1 {
+        for _ in 0..hp_peer_iter_cnt + 1 {
             // If there is address for our thread in the pool we can use it.
             // Otherwise we'll not set bound_addr and use local IP addr (127.0.0.1).
             let ip = ips.pop().unwrap_or("127.0.0.1");
@@ -149,7 +164,7 @@ async fn p002_t1_PRIO_MSG_latency() {
             socket.set_reuseaddr(true).unwrap();
             socket.set_reuseport(true).unwrap();
 
-            socket.bind(ip).expect("unable to bind to socket");
+            socket.bind(ip).expect(ERR_BIND_TO_SOCKET_FAILED);
             synth_sockets.push(socket);
         }
 
@@ -183,8 +198,8 @@ async fn p002_t1_PRIO_MSG_latency() {
             if latencies.entries() >= 1 {
                 // add stats to table display
                 table.add_row(RequestStats::new(
-                    1_u16, // only one normal peer
-                    synth_count as u16,
+                    l_prio_peers, // only one normal peer
+                    hp_peer_iter_cnt as u16,
                     REQUESTS,
                     latencies,
                     time_taken_secs,
@@ -192,7 +207,7 @@ async fn p002_t1_PRIO_MSG_latency() {
             }
         }
 
-        node.stop().expect("unable to stop the node");
+        node.stop().expect(ERR_NODE_UNABLE_TO_STOP);
     }
 
     // Display results table
@@ -200,7 +215,6 @@ async fn p002_t1_PRIO_MSG_latency() {
 }
 
 const ROUND_KEY: Round = 1;
-#[allow(unused_must_use)] // just for result of the timeout
 async fn simulate_normal_peer(
     node_addr: SocketAddr,
     socket: TcpSocket,
@@ -209,13 +223,13 @@ async fn simulate_normal_peer(
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_NODE_BUILD_FAILED);
 
     // Establish peer connection
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect("unable to connect to node");
+        .expect(ERR_NODE_CONNECTION_FAILED);
 
     // Wait for all peers to connect
     start_barrier.wait().await;
@@ -234,7 +248,7 @@ async fn simulate_normal_peer(
 
         synth_node
             .unicast(node_addr, message)
-            .expect("unable to send message");
+            .expect(ERR_SEND_MESSAGE_FAILED);
 
         let now = Instant::now();
 
@@ -250,7 +264,8 @@ async fn simulate_normal_peer(
                     break;
                 }
             }
-        }).await;
+        }).await
+        .unwrap();
     }
 
     synth_node.shut_down().await
@@ -264,34 +279,36 @@ async fn simulate_malicious_peer(
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_NODE_BUILD_FAILED);
 
     // Establish peer connection
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect("unable to connect to node");
+        .expect(ERR_NODE_CONNECTION_FAILED);
 
     // Wait for all peers to start
     start_barrier.wait().await;
 
+    // Create a MsgOfInterest message with all expected tags included.
+    let hashtags = HashSet::from([
+        Tag::ProposalPayload,
+        Tag::AgreementVote,
+        Tag::MsgOfInterest,
+        Tag::MsgDigestSkip,
+        Tag::NetPrioResponse,
+        Tag::Ping,
+        Tag::PingReply,
+        Tag::ProposalPayload,
+        Tag::StateProofSig,
+        Tag::TopicMsgResp,
+        Tag::Txn,
+        Tag::UniEnsBlockReq,
+        Tag::VoteBundle,
+    ]);
+
     for _ in 0..REQUESTS {
-        // Send a MsgOfInterest message with all expected tags included.
-        let tags = HashSet::from([
-            Tag::ProposalPayload,
-            Tag::AgreementVote,
-            Tag::MsgOfInterest,
-            Tag::MsgDigestSkip,
-            Tag::NetPrioResponse,
-            Tag::Ping,
-            Tag::PingReply,
-            Tag::ProposalPayload,
-            Tag::StateProofSig,
-            Tag::TopicMsgResp,
-            Tag::Txn,
-            Tag::UniEnsBlockReq,
-            Tag::VoteBundle,
-        ]);
+        let tags = hashtags.clone();
         let message = Payload::MsgOfInterest(MsgOfInterest { tags });
 
         if !synth_node.is_connected(node_addr) {
@@ -300,7 +317,7 @@ async fn simulate_malicious_peer(
 
         synth_node
             .unicast(node_addr, message)
-            .expect("unable to send message");
+            .expect(ERR_SEND_MESSAGE_FAILED);
 
         // Just check if there is anything to read in the incoming queue. If so, read and
         // discard it. We don't care about the response.
