@@ -10,6 +10,15 @@ use crate::protocol::{
     invalid_data,
 };
 
+/// Algorand message.
+#[derive(Debug)]
+pub struct AlgoMsg {
+    /// Message in the raw byte format.
+    pub raw: Vec<u8>,
+    /// Parsed message.
+    pub payload: Payload,
+}
+
 pub struct AlgoMsgCodec {
     websocket: WebsocketCodec,
     tagmsg: TagMsgCodec,
@@ -27,7 +36,7 @@ impl AlgoMsgCodec {
 }
 
 impl Decoder for AlgoMsgCodec {
-    type Item = Payload;
+    type Item = AlgoMsg;
     type Error = io::Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
@@ -47,6 +56,7 @@ impl Decoder for AlgoMsgCodec {
 
         let mut ws_data =
             BytesMut::try_from(ws_msg.data().as_ref()).map_err(|_| ErrorKind::InvalidData)?;
+        let raw = ws_data.to_vec();
 
         let payload = self
             .tagmsg
@@ -54,7 +64,7 @@ impl Decoder for AlgoMsgCodec {
             .map_err(|_| invalid_data!("invalid algod message"))?
             .ok_or_else(|| invalid_data!("missing algod message"))?;
 
-        Ok(Some(payload))
+        Ok(Some(AlgoMsg { raw, payload }))
     }
 }
 

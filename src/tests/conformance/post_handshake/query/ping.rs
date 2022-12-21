@@ -2,7 +2,10 @@ use tempfile::TempDir;
 use tokio::time::{timeout, Duration};
 
 use crate::{
-    protocol::codecs::payload::{Payload, PingData},
+    protocol::codecs::{
+        algomsg::AlgoMsg,
+        payload::{Payload, PingData},
+    },
     setup::node::Node,
     tools::synthetic_node::SyntheticNodeBuilder,
 };
@@ -95,8 +98,11 @@ async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
     // Wait for at least 10 minutes.
     assert!(timeout(Duration::from_secs(610), async {
         loop {
-            match synthetic_node.recv_message().await {
-                (_, Payload::AgreementVote(_) | Payload::ProposalPayload(_)) => continue,
+            match synthetic_node.recv_message().await.1 {
+                AlgoMsg {
+                    payload: Payload::AgreementVote(_) | Payload::ProposalPayload(_),
+                    ..
+                } => continue,
                 msg => {
                     tracing::info!("Received a message: {:?}", msg);
                     return true;
