@@ -12,12 +12,15 @@ use tempfile::TempDir;
 use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
 
 use crate::{
-    protocol::codecs::{
-        algomsg::AlgoMsg,
-        msgpack::Round,
-        payload::Payload,
-        tagmsg::Tag,
-        topic::{MsgOfInterest, TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
+    protocol::{
+        codecs::{
+            algomsg::AlgoMsg,
+            msgpack::Round,
+            payload::Payload,
+            tagmsg::Tag,
+            topic::{MsgOfInterest, TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
+        },
+        payload_factory::PayloadFactory,
     },
     setup::node::Node,
     tools::{
@@ -41,10 +44,10 @@ pub struct RequestsTable {
 
 #[derive(Tabled, Default, Debug, Clone)]
 pub struct RequestStats {
-    #[tabled(rename = " low-prio peers ")]
-    low_prio_peers: u16,
-    #[tabled(rename = " high-prio peers ")]
-    high_prio_peers: u16,
+    #[tabled(rename = " normal peers ")]
+    normal_peers: u16,
+    #[tabled(rename = " high-traffic peers ")]
+    high_traffic_peers: u16,
     #[tabled(rename = " requests ")]
     requests: u16,
     #[tabled(rename = " min (ms) ")]
@@ -63,17 +66,17 @@ pub struct RequestStats {
 
 impl RequestStats {
     pub fn new(
-        lprio_peers: u16,
-        hprio_peers: u16,
+        normal_peers: u16,
+        traffic_peers: u16,
         requests: u16,
         latency: Histogram,
         time: f64,
     ) -> Self {
         Self {
-            low_prio_peers: lprio_peers,
-            high_prio_peers: hprio_peers,
+            normal_peers,
+            high_traffic_peers: traffic_peers,
             requests,
-            completion: (latency.entries() as f64) / (lprio_peers as f64 * requests as f64)
+            completion: (latency.entries() as f64) / (normal_peers as f64 * requests as f64)
                 * 100.00,
             latency_min: latency.minimum().unwrap() as u16,
             latency_max: latency.maximum().unwrap() as u16,
@@ -95,50 +98,95 @@ impl std::fmt::Display for RequestsTable {
     }
 }
 
-const METRIC_LATENCY: &str = "prio_test_latency";
+const METRIC_LATENCY: &str = "traffic_test_latency";
 // number of requests to send per peer
 const REQUESTS: u16 = 300;
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(3);
+const ROUND_KEY: Round = 1;
+
+// ZG-PERFORMANCE-002, Getting messages of one kind while other nodes send some other traffic
+//
+// We test the overall performance of a node's certain message types latency while other
+// nodes send some other traffic, especially higher priority traffic.
+//
+// Test should be inspected manually to check how other nodes affect the latency of
+// the node under test. Each test case prints a table with results.
+//
+// Sample results:
+// ┌────────────────┬──────────────────────┬────────────┬────────────┬────────────┬────────────────┬────────────────┬────────────┐
+// │  normal peers  │  high-traffic peers  │  requests  │  min (ms)  │  max (ms)  │  std dev (ms)  │  completion %  │  time (s)  │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                    1 │        300 │          0 │          1 │              1 │         100.00 │       0.44 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                   50 │        300 │          1 │          2 │              1 │         100.00 │       0.50 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                  100 │        300 │          1 │          2 │              1 │         100.00 │       0.58 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                  200 │        300 │          1 │          6 │              1 │         100.00 │       0.63 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                  300 │        300 │          1 │         24 │              2 │         100.00 │       0.78 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                  400 │        300 │          1 │          7 │              1 │         100.00 │       0.77 │
+// ├────────────────┼──────────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
+// │              1 │                  799 │        300 │          1 │         10 │              1 │         100.00 │       0.82 │
+// └────────────────┴──────────────────────┴────────────┴────────────┴────────────┴────────────────┴────────────────┴────────────┘
+// *NOTE* run with `cargo test --release  tests::performance::prio -- --nocapture --test-threads=1`
+// Before running test generate dummy devices with different ips using toos/ips.py
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 #[allow(non_snake_case)]
-async fn p002_t1_PRIO_MSG_latency() {
-    // ZG-PERFORMANCE-002, Getting low prio meesages while other nodes send higher priority msgs
-    //
-    // We test the overall performance of a node's get blocks (with certs) latency while other
-    // other nodes send higher priority messages.
-    //
-    // Test should be inspected manually to check how other nodes affect the latency of
-    // the node under test.
-    //
-    // Sample results:
-    // ┌──────────────────┬───────────────────┬────────────┬────────────┬────────────┬────────────────┬────────────────┬────────────┐
-    // │  low-prio peers  │  high-prio peers  │  requests  │  min (ms)  │  max (ms)  │  std dev (ms)  │  completion %  │  time (s)  │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │                 1 │        300 │          1 │          2 │              1 │         100.00 │       0.46 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │                50 │        300 │          1 │          2 │              1 │         100.00 │       0.48 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │               100 │        300 │          1 │          3 │              1 │         100.00 │       0.53 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │               200 │        300 │          1 │          3 │              1 │         100.00 │       0.55 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │               300 │        300 │          1 │          5 │              1 │         100.00 │       0.75 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │               400 │        300 │          1 │          4 │              1 │         100.00 │       0.76 │
-    // ├──────────────────┼───────────────────┼────────────┼────────────┼────────────┼────────────────┼────────────────┼────────────┤
-    // │                1 │               799 │        300 │          1 │          7 │              1 │         100.00 │       0.78 │
-    // └──────────────────┴───────────────────┴────────────┴────────────┴────────────┴────────────────┴────────────────┴────────────┘
-    // *NOTE* run with `cargo test --release  tests::performance::prio -- --nocapture`
-    // Before running test generate dummy devices with different ips using toos/ips.py
+async fn p002_t1_TRAFFIC_HIGH_LOW_latency() {
+    let tags = HashSet::from([
+        Tag::ProposalPayload,
+        Tag::AgreementVote,
+        Tag::MsgOfInterest,
+        Tag::MsgDigestSkip,
+        Tag::NetPrioResponse,
+        Tag::Ping,
+        Tag::PingReply,
+        Tag::ProposalPayload,
+        Tag::StateProofSig,
+        Tag::TopicMsgResp,
+        Tag::Txn,
+        Tag::UniEnsBlockReq,
+        Tag::VoteBundle,
+    ]);
+    let high_prio_factory = PayloadFactory::new(Payload::MsgOfInterest(MsgOfInterest { tags }));
+    let low_prio_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
+        data_type: UniEnsBlockReqType::BlockAndCert,
+        round_key: ROUND_KEY,
+        nonce: 123,
+    }));
+    run_traffic_test(high_prio_factory, low_prio_factory).await;
+}
 
-    let h_prio_peer_set = vec![1, 50, 100, 200, 300, 400, 799];
-    let l_prio_peers = 1;
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(non_snake_case)]
+async fn p002_t2_TRAFFIC_SAME_PRIO_latency() {
+    let high_traffic_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
+        data_type: UniEnsBlockReqType::Cert,
+        round_key: 3,
+        nonce: 1,
+    }));
+    let normal_traffic_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
+        data_type: UniEnsBlockReqType::BlockAndCert,
+        round_key: ROUND_KEY,
+        nonce: 123,
+    }));
+    run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
+}
+
+async fn run_traffic_test(
+    high_traffic_factory: PayloadFactory,
+    normal_traffic_factory: PayloadFactory,
+) {
+    let h_traffic_peer_set = vec![1, 50, 100, 200, 300, 400, 799];
+    let n_traffic_peers = 1;
 
     let mut table = RequestsTable::default();
 
-    for h_prio_peers in h_prio_peer_set {
-        let total_peers = l_prio_peers + h_prio_peers;
+    for h_traffic_peers in h_traffic_peer_set {
+        let total_peers = n_traffic_peers + h_traffic_peers;
         let barrier = Arc::new(Barrier::new(total_peers));
 
         let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
@@ -175,15 +223,21 @@ async fn p002_t1_PRIO_MSG_latency() {
         let test_start = tokio::time::Instant::now();
 
         let arc_barrier = barrier.clone();
-        synth_handles.spawn(simulate_low_priority_peer(
+        synth_handles.spawn(simulate_normal_traffic_peer(
             node_addr,
             synth_sockets.pop().unwrap(),
             arc_barrier,
+            normal_traffic_factory.clone(),
         ));
 
         for socket in synth_sockets {
             let arc_barrier = barrier.clone();
-            synth_handles.spawn(simulate_high_priority_peer(node_addr, socket, arc_barrier));
+            synth_handles.spawn(simulate_high_priority_peer(
+                node_addr,
+                socket,
+                arc_barrier,
+                high_traffic_factory.clone(),
+            ));
         }
 
         // wait for peers to complete
@@ -196,8 +250,8 @@ async fn p002_t1_PRIO_MSG_latency() {
             if latencies.entries() >= 1 {
                 // add stats to table display
                 table.add_row(RequestStats::new(
-                    l_prio_peers as u16, // only one normal peer
-                    h_prio_peers as u16,
+                    n_traffic_peers as u16, // only one normal peer
+                    h_traffic_peers as u16,
                     REQUESTS,
                     latencies,
                     time_taken_secs,
@@ -212,11 +266,12 @@ async fn p002_t1_PRIO_MSG_latency() {
     println!("\r\n{}", table);
 }
 
-const ROUND_KEY: Round = 1;
-async fn simulate_low_priority_peer(
+#[allow(unused_must_use)]
+async fn simulate_normal_traffic_peer(
     node_addr: SocketAddr,
     socket: TcpSocket,
     start_barrier: Arc<Barrier>,
+    normal_traffic_factory: PayloadFactory,
 ) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
@@ -232,12 +287,8 @@ async fn simulate_low_priority_peer(
     // Wait for all peers to connect
     start_barrier.wait().await;
 
-    for i in 0..REQUESTS {
-        let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
-            data_type: UniEnsBlockReqType::BlockAndCert,
-            round_key: ROUND_KEY,
-            nonce: i as u64,
-        });
+    for _ in 0..REQUESTS {
+        let message = normal_traffic_factory.generate_next();
 
         // Query transaction via peer protocol.
         if !synth_node.is_connected(node_addr) {
@@ -253,17 +304,19 @@ async fn simulate_low_priority_peer(
         // We can safely drop the result here because we don't care about it - if the message is
         // received and it's our response we simply register it for histogram and break the loop.
         // In every other case we simply move out and go to another request iteration.
+        // We cannot simply put Unwrap here because it will panic on timeout - that's not our
+        // intention - we want to run the test further and gather other results.
         timeout(RESPONSE_TIMEOUT, async {
             loop {
                 let m = synth_node.recv_message().await.1;
+                // TODO[asmie]: matcher should be taken from the factory or should depened on factory payload type used
                 if matches!(&m, AlgoMsg { payload: Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp)), ..}
                      if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == ROUND_KEY && rsp.cert.is_some()) {
                     metrics::histogram!(METRIC_LATENCY, duration_as_ms(now.elapsed()));
                     break;
                 }
             }
-        }).await
-        .unwrap();
+        }).await;
     }
 
     synth_node.shut_down().await
@@ -273,6 +326,7 @@ async fn simulate_high_priority_peer(
     node_addr: SocketAddr,
     socket: TcpSocket,
     start_barrier: Arc<Barrier>,
+    high_traffic_factory: PayloadFactory,
 ) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
@@ -288,26 +342,8 @@ async fn simulate_high_priority_peer(
     // Wait for all peers to start
     start_barrier.wait().await;
 
-    // Create a MsgOfInterest message with all expected tags included.
-    let hashtags = HashSet::from([
-        Tag::ProposalPayload,
-        Tag::AgreementVote,
-        Tag::MsgOfInterest,
-        Tag::MsgDigestSkip,
-        Tag::NetPrioResponse,
-        Tag::Ping,
-        Tag::PingReply,
-        Tag::ProposalPayload,
-        Tag::StateProofSig,
-        Tag::TopicMsgResp,
-        Tag::Txn,
-        Tag::UniEnsBlockReq,
-        Tag::VoteBundle,
-    ]);
-
     for _ in 0..REQUESTS {
-        let tags = hashtags.clone();
-        let message = Payload::MsgOfInterest(MsgOfInterest { tags });
+        let message = high_traffic_factory.generate_next();
 
         if !synth_node.is_connected(node_addr) {
             break;
