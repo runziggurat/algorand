@@ -1,2 +1,2 @@
 mod handshake;
-mod post_handshake;
+pub mod post_handshake;
