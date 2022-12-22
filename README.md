@@ -66,7 +66,7 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 | [010](SPEC.md#ZG-CONFORMANCE-010) |  ✓/✖   | Only BlockAndCert request is supported, other type requests are unsupported |
 | [011](SPEC.md#ZG-CONFORMANCE-011) |   ✓    |                                                                             |
 | [012](SPEC.md#ZG-CONFORMANCE-012) |   ✓    |                                                                             |
-| [013](SPEC.md#ZG-CONFORMANCE-013) |   -    |                                                                             |
+| [013](SPEC.md#ZG-CONFORMANCE-013) |   ✓    |                                                                             |
 
 ### Performance
 

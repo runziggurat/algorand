@@ -83,11 +83,11 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 | /v1/block/{round}          | HTTP (get block)      | ✅       | `C004`                            |
 | AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`                            |
 | MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`, `P002`            |
-| MsgDigestSkipTag           | WS data (Tag: MS)     | ❌       |                                   |
+| MsgDigestSkipTag           | WS data (Tag: MS)     | ✅       | `C013`                            |
 | NetPrioResponseTag         | WS data (Tag: NP)     | ✅       | `C011`                            |
 | PingTag                    | WS data (Tag: pi)     | ✅       | `C009`                            |
 | PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
-| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`, `R004`                    |
+| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`, `C013`, `R004`            |
 | StateProofSigTag           | WS data (Tag: SP)     | ❌       |                                   |
 | UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`                            |
 | UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`, `P001`, `P002`            |
@@ -214,11 +214,14 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 ### ZG-CONFORMANCE-013
 
-    Reserved
+    Send a huge valid proposal payload message to the node from one synthetic node and expect to receive a
+    MsgDigestSkip message on the other synthetic node as a filter for a massive proposal payload message.
 
-### ZG-CONFORMANCE-014
+    <>
+    -> ProposalPayload (enormous size)
+    << MsgDigestSkip (hash of enormous proposal payload)
 
-    Reserved
+    Assert: the node successfully broadcasts the filter message.
 
 ## Performance
 
