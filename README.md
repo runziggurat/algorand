@@ -81,4 +81,4 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 | [001](SPEC.md#ZG-RESISTANCE-001)  |   -    |                                                                             |
 | [002](SPEC.md#ZG-RESISTANCE-002)  |  ✓/✖   | The procedure accepts sometimes invalid requests (should be improved)       |
 | [003](SPEC.md#ZG-RESISTANCE-003)  |   -    |                                                                             |
-| [004](SPEC.md#ZG-RESISTANCE-004)  |   -    |                                                                             |
+| [004](SPEC.md#ZG-RESISTANCE-004)  |   ✓    |                                                                             |

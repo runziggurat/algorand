@@ -16,7 +16,7 @@ use crate::{
     tools::synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
 };
 
-async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
+pub async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
     // Create a synthetic node and enable handshaking.
     let synthetic_node = SyntheticNodeBuilder::default()
         .build()
@@ -32,7 +32,7 @@ async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
     synthetic_node
 }
 
-async fn get_wallet_token(kmd: &mut Kmd) -> String {
+pub async fn get_wallet_token(kmd: &mut Kmd) -> String {
     let wallets = kmd.get_wallets().await.expect("couldn't get the wallets");
 
     let wallet_id = wallets
@@ -48,7 +48,7 @@ async fn get_wallet_token(kmd: &mut Kmd) -> String {
         .wallet_handle_token
 }
 
-async fn get_txn_params(node: &mut Node) -> TransactionParams {
+pub async fn get_txn_params(node: &mut Node) -> TransactionParams {
     node.rest_client()
         .expect("couldn't get the REST client")
         .get_transaction_params()
@@ -56,7 +56,7 @@ async fn get_txn_params(node: &mut Node) -> TransactionParams {
         .expect("couldn't get the transaction parameters")
 }
 
-async fn get_pub_key_addr(kmd: &mut Kmd, wallet_token: String) -> Address {
+pub async fn get_pub_key_addr(kmd: &mut Kmd, wallet_token: String) -> Address {
     let pub_key = kmd
         .get_keys(wallet_token)
         .await
@@ -68,7 +68,11 @@ async fn get_pub_key_addr(kmd: &mut Kmd, wallet_token: String) -> Address {
     Address::from_string(&pub_key).expect("couldn't convert public key to address")
 }
 
-async fn get_signed_tagged_txn(kmd: &mut Kmd, wallet_token: String, txn: &Transaction) -> Vec<u8> {
+pub async fn get_signed_tagged_txn(
+    kmd: &mut Kmd,
+    wallet_token: String,
+    txn: &Transaction,
+) -> Vec<u8> {
     let mut signed_txn = kmd
         .sign_transaction(wallet_token, "".to_string(), txn)
         .await

@@ -79,23 +79,21 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 |  Message                   | Type                  | Coverage | Tests                             |
 |----------------------------|-----------------------|----------|-----------------------------------|
-| /v1/{network-name}/gossip  | HTTP (handshake)      | ✅       | `C001`, `C002`, `C003`            |
+| /v1/{network-name}/gossip  | HTTP (handshake)      | ✅       | `C001`, `C002`, `C003`, `R002`    |
 | /v1/block/{round}          | HTTP (get block)      | ✅       | `C004`                            |
 | AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`                            |
-| MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`                    |
+| MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`, `P002`            |
 | MsgDigestSkipTag           | WS data (Tag: MS)     | ❌       |                                   |
 | NetPrioResponseTag         | WS data (Tag: NP)     | ✅       | `C011`                            |
 | PingTag                    | WS data (Tag: pi)     | ✅       | `C009`                            |
 | PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
-| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`                            |
+| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`, `R004`                    |
 | StateProofSigTag           | WS data (Tag: SP)     | ❌       |                                   |
 | UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`                            |
-| UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`                            |
-| TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`                            |
+| UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`, `P001`, `P002`            |
+| TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`, `P001`, `P002`            |
 | TxnTag                     | WS data (Tag: TX)     | ✅       | `C012`                            |
 | VoteBundleTag              | WS data (Tag: VB)     | ❌       |                                   |
-
-_TODO: Investigate more REST API calls and possibly include above._
 
 ## Conformance
 
@@ -262,7 +260,7 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-RESISTANCE-002
 
-    Node rejects the handshake in case the request handshake message contains invalid data.
+    The node rejects the handshake in case the request handshake message contains invalid data.
 
     ->
     -> http handshake request (with an invalid data)
@@ -276,5 +274,12 @@ _TODO: Investigate more REST API calls and possibly include above._
 
 ### ZG-RESISTANCE-004
 
-    Reserved
+    The node can handle enormous messages.
+
+    <>
+    -> ProposalPayload (enormous size)
+
+    Assert: the node handles enormous messages properly.
+
+    TODO(Rqnsom): Add subtest 2 description
 

@@ -9,6 +9,7 @@ use tokio::{net::TcpSocket, task::JoinSet, time::timeout};
 
 use crate::{
     protocol::codecs::{
+        algomsg::AlgoMsg,
         msgpack::Round,
         payload::Payload,
         topic::{TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
@@ -173,7 +174,7 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
         timeout(RESPONSE_TIMEOUT, async {
             loop {
                 let m = synth_node.recv_message().await;
-                if matches!(&m.1, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
+                if matches!(&m.1, AlgoMsg { payload: Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp)), .. }
                      if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == ROUND_KEY && rsp.cert.is_some()) {
                     metrics::histogram!(METRIC_LATENCY, duration_as_ms(now.elapsed()));
                     break;

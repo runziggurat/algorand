@@ -17,7 +17,10 @@ use tokio::{
 use tracing::trace;
 
 use crate::{
-    protocol::{codecs::payload::Payload, handshake::HandshakeCfg},
+    protocol::{
+        codecs::{algomsg::AlgoMsg, payload::Payload},
+        handshake::HandshakeCfg,
+    },
     tools::{constants::EXPECT_MSG_TIMEOUT, inner_node::InnerNode},
 };
 
@@ -96,7 +99,7 @@ impl SyntheticNodeBuilder {
 /// Convenient abstraction over a `pea2pea` node.
 pub struct SyntheticNode {
     inner: InnerNode,
-    inbound_rx: Receiver<(SocketAddr, Payload)>,
+    inbound_rx: Receiver<(SocketAddr, AlgoMsg)>,
 }
 
 impl SyntheticNode {
@@ -167,10 +170,10 @@ impl SyntheticNode {
     }
 
     /// Reads a message from the inbound (internal) queue of the node.
-    pub async fn recv_message(&mut self) -> (SocketAddr, Payload) {
+    pub async fn recv_message(&mut self) -> (SocketAddr, AlgoMsg) {
         match self.inbound_rx.recv().await {
-            Some(message) => message,
-            None => panic!("all senders dropped!"),
+            Some(msg) => msg,
+            None => panic!("all senders dropped"),
         }
     }
 
@@ -179,9 +182,9 @@ impl SyntheticNode {
     pub async fn recv_message_timeout(
         &mut self,
         duration: Duration,
-    ) -> io::Result<(SocketAddr, Payload)> {
+    ) -> io::Result<(SocketAddr, AlgoMsg)> {
         match timeout(duration, self.recv_message()).await {
-            Ok(message) => Ok(message),
+            Ok(msg) => Ok(msg),
             Err(_) => Err(io::Error::new(
                 io::ErrorKind::TimedOut,
                 format!("could not read the message after: {:?}", duration),
@@ -193,8 +196,8 @@ impl SyntheticNode {
     pub async fn expect_message(&mut self, check: &dyn Fn(&Payload) -> bool) -> bool {
         timeout(EXPECT_MSG_TIMEOUT, async {
             loop {
-                let (_, message) = self.recv_message().await;
-                if check(&message) {
+                let (_, msg) = self.recv_message().await;
+                if check(&msg.payload) {
                     return true;
                 }
             }

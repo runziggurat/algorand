@@ -13,6 +13,7 @@ use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
 
 use crate::{
     protocol::codecs::{
+        algomsg::AlgoMsg,
         msgpack::Round,
         payload::Payload,
         tagmsg::Tag,
@@ -254,8 +255,8 @@ async fn simulate_low_priority_peer(
         // In every other case we simply move out and go to another request iteration.
         timeout(RESPONSE_TIMEOUT, async {
             loop {
-                let m = synth_node.recv_message().await;
-                if matches!(&m.1, Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp))
+                let m = synth_node.recv_message().await.1;
+                if matches!(&m, AlgoMsg { payload: Payload::TopicMsgResp(TopicMsgResp::UniEnsBlockRsp(rsp)), ..}
                      if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == ROUND_KEY && rsp.cert.is_some()) {
                     metrics::histogram!(METRIC_LATENCY, duration_as_ms(now.elapsed()));
                     break;

@@ -26,6 +26,12 @@ pub const ERR_NODE_BUILD: &str = "unable to build the node";
 /// Error message when a node fails to stop.
 pub const ERR_NODE_STOP: &str = "unable to stop the node";
 
+/// Error message when building a kmd instance fails.
+pub const ERR_KMD_BUILD: &str = "unable to build the kmd instance";
+
+/// Error message when a kmd instance fails to stop.
+pub const ERR_KMD_STOP: &str = "unable to stop the kmd instance";
+
 /// Error message when sending message fails.
 pub const ERR_SYNTH_UNICAST: &str = "unable to send a message";
 
