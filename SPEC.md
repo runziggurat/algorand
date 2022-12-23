@@ -261,7 +261,11 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 ### ZG-RESISTANCE-001
 
-    Reserved (send random bytes before the handshake)
+    The node rejects various random bytes pre-handshake.
+
+    -> random bytes
+
+    Assert: The synthetic node is disconnected after sending random bytes.
 
 ### ZG-RESISTANCE-002
 

@@ -70,8 +70,8 @@ fn gen_huge_string(len: usize) -> String {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t1_HANDSHAKE_instance_name() {
-    // ZG-RESISTANCE-001
+async fn r002_t1_HANDSHAKE_instance_name() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         ar_instance_name: gen_huge_string(len),
@@ -98,8 +98,8 @@ async fn r001_t1_HANDSHAKE_instance_name() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t2_HANDSHAKE_node_random() {
-    // ZG-RESISTANCE-001
+async fn r002_t2_HANDSHAKE_node_random() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         ar_node_random: gen_huge_string(len),
@@ -125,8 +125,8 @@ async fn r001_t2_HANDSHAKE_node_random() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t3_HANDSHAKE_genesis() {
-    // ZG-RESISTANCE-001
+async fn r002_t3_HANDSHAKE_genesis() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         ar_genesis: gen_huge_string(len),
@@ -153,8 +153,8 @@ async fn r001_t3_HANDSHAKE_genesis() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t4_HANDSHAKE_user_agent() {
-    // ZG-RESISTANCE-001
+async fn r002_t4_HANDSHAKE_user_agent() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         user_agent: gen_huge_string(len),
@@ -181,8 +181,8 @@ async fn r001_t4_HANDSHAKE_user_agent() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t5_HANDSHAKE_ws_version() {
-    // ZG-RESISTANCE-001
+async fn r002_t5_HANDSHAKE_ws_version() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg_huge = |len| HandshakeCfg {
         ws_version: gen_huge_string(len),
@@ -218,8 +218,8 @@ async fn r001_t5_HANDSHAKE_ws_version() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t6_HANDSHAKE_tel_id() {
-    // ZG-RESISTANCE-001
+async fn r002_t6_HANDSHAKE_tel_id() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         ar_tel_id: Some(gen_huge_string(len)),
@@ -245,8 +245,8 @@ async fn r001_t6_HANDSHAKE_tel_id() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t7_HANDSHAKE_ws_key() {
-    // ZG-RESISTANCE-001
+async fn r002_t7_HANDSHAKE_ws_key() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| -> HandshakeCfg {
         let mut ws_key = SecWebSocket::generate();
@@ -275,8 +275,8 @@ async fn r001_t7_HANDSHAKE_ws_key() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t8_HANDSHAKE_location() {
-    // ZG-RESISTANCE-001
+async fn r002_t8_HANDSHAKE_location() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg = |len| HandshakeCfg {
         ar_location: Some(gen_huge_string(len)),
@@ -302,8 +302,8 @@ async fn r001_t8_HANDSHAKE_location() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t9_HANDSHAKE_version() {
-    // ZG-RESISTANCE-001
+async fn r002_t9_HANDSHAKE_version() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg_huge = |len| HandshakeCfg {
         ar_version: gen_huge_string(len),
@@ -351,8 +351,8 @@ async fn r001_t9_HANDSHAKE_version() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r001_t10_HANDSHAKE_accept_version() {
-    // ZG-RESISTANCE-001
+async fn r002_t10_HANDSHAKE_accept_version() {
+    // ZG-RESISTANCE-002
 
     let gen_cfg_huge = |len| HandshakeCfg {
         ar_accept_version: gen_huge_string(len),
