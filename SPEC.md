@@ -81,19 +81,19 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 |----------------------------|-----------------------|----------|-----------------------------------|
 | /v1/{network-name}/gossip  | HTTP (handshake)      | ✅       | `C001`, `C002`, `C003`, `R002`    |
 | /v1/block/{round}          | HTTP (get block)      | ✅       | `C004`                            |
-| AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`                            |
-| MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`, `P002`            |
-| MsgDigestSkipTag           | WS data (Tag: MS)     | ✅       | `C013`                            |
-| NetPrioResponseTag         | WS data (Tag: NP)     | ✅       | `C011`                            |
-| PingTag                    | WS data (Tag: pi)     | ✅       | `C009`                            |
-| PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`                            |
-| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`, `C013`, `R004`            |
-| StateProofSigTag           | WS data (Tag: SP)     | ❌       |                                   |
-| UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`                            |
-| UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`, `P001`, `P002`            |
-| TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`, `P001`, `P002`            |
-| TxnTag                     | WS data (Tag: TX)     | ✅       | `C012`                            |
-| VoteBundleTag              | WS data (Tag: VB)     | ❌       |                                   |
+| AgreementVoteTag           | WS data (Tag: AV)     | ✅       | `C008`, `R003`                    |
+| MsgOfInterestTag           | WS data (Tag: MI)     | ✅       | `C005`, `C006`, `P002`, `R003`    |
+| MsgDigestSkipTag           | WS data (Tag: MS)     | ✅       | `C013`, `R003`                    |
+| NetPrioResponseTag         | WS data (Tag: NP)     | ✅       | `C011`, `R003`                    |
+| PingTag                    | WS data (Tag: pi)     | ✅       | `C009`, `R003`                    |
+| PingReplyTag               | WS data (Tag: pj)     | ✅       | `C009`, `R003`                    |
+| ProposalPayloadTag         | WS data (Tag: PP)     | ✅       | `C007`, `C013`, `R004`, `R003`    |
+| StateProofSigTag           | WS data (Tag: SP)     | ❌       | `R003`                            |
+| UniCatchupReqTag           | WS data (Tag: UC)     | ✅       | `C010`, `R003`                    |
+| UniEnsBlockReqTag          | WS data (Tag: UE)     | ✅       | `C010`, `P001`, `P002`, `R003`    |
+| TopicMsgRespTag            | WS data (Tag: TS)     | ✅       | `C010`, `P001`, `P002`, `R003`    |
+| TxnTag                     | WS data (Tag: TX)     | ✅       | `C012`, `R003`                    |
+| VoteBundleTag              | WS data (Tag: VB)     | ❌       | `R003`                            |
 
 ## Conformance
 
@@ -279,7 +279,15 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 ### ZG-RESISTANCE-003
 
-    Reserved
+    The node rejects various random bytes post-handshake.
+
+    -> random bytes
+
+    or alternatively
+
+    -> random bytes prefixed with a valid Algod message tag
+
+    Assert: The synthetic node is disconnected after sending random bytes.
 
 ### ZG-RESISTANCE-004
 
