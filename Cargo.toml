@@ -16,7 +16,7 @@ home = "0.5.3"
 httparse = "1.8"
 metrics = "0.20.0"
 metrics-util = "0.14.0"
-pea2pea = "0.43"
+pea2pea = "0.44"
 radix_fmt = "1.0"
 rand = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
