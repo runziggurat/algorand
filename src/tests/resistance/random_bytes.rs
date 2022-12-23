@@ -1,9 +1,10 @@
 use tempfile::TempDir;
-use tokio::time::{sleep, Duration};
+use tokio::time::sleep;
 
 use crate::{
     protocol::codecs::payload::Payload,
     setup::node::Node,
+    tests::resistance::WAIT_FOR_DISCONNECT,
     tools::{
         constants::{
             ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
@@ -46,7 +47,6 @@ async fn send_random_data_to_the_node_pre_handshake(len: usize, debug: bool) -> 
         .expect(ERR_SYNTH_UNICAST);
 
     // Give some time to the node to kill our connection.
-    const WAIT_FOR_DISCONNECT: Duration = Duration::from_millis(500);
     sleep(WAIT_FOR_DISCONNECT).await;
 
     let is_connected = synthetic_node.is_connected(net_addr);
