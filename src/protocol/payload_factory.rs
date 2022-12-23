@@ -20,12 +20,9 @@ impl PayloadFactory {
     pub fn generate_next(&mut self) -> Payload {
         // For now, we're incrementing nonce in UniEnsBlockReq and not change other
         // type of messages.
-        match &mut self.payload {
-            Payload::UniEnsBlockReq(message) => {
-                message.nonce += 1;
-            }
-            _ => {}
-        };
+        if let Payload::UniEnsBlockReq(message) = &mut self.payload {
+            message.nonce += 1;
+        }
 
         self.payload.clone()
     }
