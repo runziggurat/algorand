@@ -9,3 +9,5 @@ pub mod ips;
 pub mod metrics;
 #[allow(dead_code)]
 pub mod synthetic_node;
+#[allow(dead_code)]
+pub mod util;

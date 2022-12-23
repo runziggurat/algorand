@@ -18,6 +18,7 @@ metrics = "0.20.0"
 metrics-util = "0.14.0"
 pea2pea = "0.43"
 radix_fmt = "1.0"
+rand = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
 rmp-serde = "1.0.0"
 serde_bytes = "0.11"
