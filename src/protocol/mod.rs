@@ -3,6 +3,8 @@
 pub mod codecs;
 pub mod constants;
 pub mod handshake;
+#[allow(dead_code)]
+pub mod payload_factory;
 mod reading;
 mod writing;
 

@@ -239,21 +239,23 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 
 ### ZG-PERFORMANCE-002
 
-    The node behaves as expected under load when some peers are sending higher priority messages and some other peer 
-    is trying to request blocks with certificates (that are lower priority messages).
+    The node behaves as expected under load when some peers are sending much traffic and some other peer 
+    is trying to perform some other operations. There are different test cases checked especially the ones when
+    nodes are sending traffic with messages with different priorities as well as the ones when nodes are sending
+    messages with the same priority.
 
-    Normal peer:
+    Normal peer (example):
     <>
     In loop:
         -> UniEnsBlockReq
         <- TopicMsgResp
 
-    High priority peers (potential malicious ones):
+    High traffic peers (example):
         <>
     In loop:
         -> MsgOfInterest
 
-    Results should be introspected manually to check the normal peer responsiveness (latency, throughput) when requesting block data.
+    Results should be introspected manually to check the normal peer responsiveness (latency, throughput) when performing its operations.
 
 ## Resistance
 
