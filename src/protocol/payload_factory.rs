@@ -8,10 +8,8 @@ pub struct PayloadFactory {
 
 impl PayloadFactory {
     /// Create a new payload factory using specified payload as a template.
-    pub fn new(payload_type: Payload) -> Self {
-        Self {
-            payload: payload_type,
-        }
+    pub fn new(payload: Payload) -> Self {
+        Self { payload }
     }
 
     // TODO[asmie]: Add generate() method to start generating payloads (first message).
@@ -19,17 +17,16 @@ impl PayloadFactory {
 
     /// Create a new payload with the same type as the template. If there is a need to
     /// change any payload fields it's done here.
-    pub fn generate_next(&self) -> Payload {
-        let msg = self.payload.clone();
-
+    pub fn generate_next(&mut self) -> Payload {
         // For now, we're incrementing nonce in UniEnsBlockReq and not change other
         // type of messages.
-        match msg {
-            Payload::UniEnsBlockReq(mut message) => {
+        match &mut self.payload {
+            Payload::UniEnsBlockReq(message) => {
                 message.nonce += 1;
-                Payload::UniEnsBlockReq(message)
             }
-            _ => msg,
-        }
+            _ => {}
+        };
+
+        self.payload.clone()
     }
 }

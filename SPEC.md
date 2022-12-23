@@ -244,7 +244,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
     Normal peer (example):
     <>
     In loop:
-        -> UniEnsBlockReq 
+        -> UniEnsBlockReq
         <- TopicMsgResp
 
     High traffic peers (example):

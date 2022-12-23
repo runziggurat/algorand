@@ -67,14 +67,14 @@ pub struct RequestStats {
 impl RequestStats {
     pub fn new(
         normal_peers: u16,
-        traffic_peers: u16,
+        high_traffic_peers: u16,
         requests: u16,
         latency: Histogram,
         time: f64,
     ) -> Self {
         Self {
             normal_peers,
-            high_traffic_peers: traffic_peers,
+            high_traffic_peers,
             requests,
             completion: (latency.entries() as f64) / (normal_peers as f64 * requests as f64)
                 * 100.00,
@@ -271,7 +271,7 @@ async fn simulate_normal_traffic_peer(
     node_addr: SocketAddr,
     socket: TcpSocket,
     start_barrier: Arc<Barrier>,
-    normal_traffic_factory: PayloadFactory,
+    mut normal_traffic_factory: PayloadFactory,
 ) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
@@ -326,7 +326,7 @@ async fn simulate_high_priority_peer(
     node_addr: SocketAddr,
     socket: TcpSocket,
     start_barrier: Arc<Barrier>,
-    high_traffic_factory: PayloadFactory,
+    mut high_traffic_factory: PayloadFactory,
 ) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
