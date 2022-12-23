@@ -19,7 +19,7 @@ use crate::{
 };
 
 // Generates a valid proposal payload message which contains a massive amount of transactions.
-async fn get_huge_proposal_payload() -> AlgoMsg {
+pub async fn get_huge_proposal_payload() -> AlgoMsg {
     // Spin up a node instance.
     let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
@@ -125,7 +125,7 @@ async fn r004_t1_PROPOPSAL_PAYLOAD_send_a_huge_valid_msg() {
     let check_pp_msg = |m: &Payload| matches!(&m, Payload::ProposalPayload(_));
     assert!(synthetic_node.expect_message(&check_pp_msg).await);
 
-    // Send a massive ProposalPayload message recored previouosly.
+    // Send a massive ProposalPayload message recorded previously.
     let msg = Payload::RawBytes(pp_msg.raw);
     assert!(synthetic_node.unicast(net_addr, msg.clone()).is_ok());
 

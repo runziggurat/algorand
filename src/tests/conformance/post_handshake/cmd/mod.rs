@@ -1,5 +1,6 @@
 //! Test suite for command messages - which do not generate a response from the node.
 
+mod msg_digest_skip;
 mod transaction;
 
 use std::net::SocketAddr;

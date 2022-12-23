@@ -1,1 +1,1 @@
-mod enormous_message;
+pub mod enormous_message;
