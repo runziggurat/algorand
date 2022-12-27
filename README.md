@@ -82,4 +82,4 @@ These results were obtained by running the test suite against [Algorand v3.12.2-
 | [001](SPEC.md#ZG-RESISTANCE-001)  |   ✖    | The node doesn't reject the connection in case a small amount of random data is sent       |
 | [002](SPEC.md#ZG-RESISTANCE-002)  |  ✓/✖   | The procedure accepts sometimes invalid requests (should be improved)                      |
 | [003](SPEC.md#ZG-RESISTANCE-003)  |   ✖    | The node doesn't reject the connection in most scenarios                                   |
-| [004](SPEC.md#ZG-RESISTANCE-004)  |   ✓    |                                                                                            |
+| [004](SPEC.md#ZG-RESISTANCE-004)  |  ✓/✖   | The node won't reject the connection for enormously long and invalid messages              |

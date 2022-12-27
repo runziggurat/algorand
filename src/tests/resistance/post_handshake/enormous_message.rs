@@ -6,6 +6,7 @@ use crate::{
         algomsg::AlgoMsg,
         msgpack::{Payment, Transaction, TransactionType},
         payload::Payload,
+        tagmsg::Tag,
     },
     setup::{kmd::Kmd, node::Node},
     tests::conformance::post_handshake::cmd::{
@@ -13,8 +14,8 @@ use crate::{
         get_wallet_token,
     },
     tools::constants::{
-        ERR_KMD_BUILD, ERR_KMD_STOP, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW,
-        EXPECT_MSG_TIMEOUT,
+        ERR_KMD_BUILD, ERR_KMD_STOP, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP,
+        ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW, EXPECT_MSG_TIMEOUT,
     },
 };
 
@@ -149,6 +150,46 @@ async fn r004_t1_PROPOPSAL_PAYLOAD_send_a_huge_valid_msg() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-async fn r004_t2_XXX_send_a_huge_invalid_msg() {
-    // TODO(Rqnsom): implement
+async fn r004_t2_MSG_DIGEST_SKIP_send_a_huge_invalid_msg() {
+    // ZG-RESISTANCE-004
+    //
+    // Send a huge invalid message to the node and expect to lose connection.
+
+    // MsgDigestSkip imitation - expected message length is tag (2 bytes) + hash (32 bytes) = 34 bytes.
+    let mut msg = Tag::get_tag_str(&Tag::MsgDigestSkip).as_bytes().to_vec();
+    // Empirical value which the node won't reject.
+    let simple_data = vec![b'y'; 6_250_000];
+    msg.extend(simple_data);
+
+    // Spin up a node instance.
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
+    node.start().await;
+
+    // Create a synthetic node.
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
+    let mut synthetic_node = get_handshaked_synth_node(net_addr).await;
+
+    synthetic_node
+        .unicast(net_addr, Payload::RawBytes(msg))
+        .expect(ERR_SYNTH_UNICAST);
+
+    // Clear the inbound queue.
+    while synthetic_node
+        .recv_message_timeout(Duration::from_millis(50))
+        .await
+        .is_ok()
+    {}
+
+    // Check that we are still receiving messages.
+    assert!(
+        !synthetic_node
+            .expect_message(&|m: &Payload| matches!(&m, _))
+            .await,
+        "the connection is still established"
+    );
+
+    // Gracefully shut down the nodes.
+    synthetic_node.shut_down().await;
+    node.stop().expect(ERR_NODE_STOP);
 }
