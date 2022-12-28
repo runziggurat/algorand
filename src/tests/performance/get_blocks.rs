@@ -30,9 +30,10 @@ const METRIC_LATENCY: &str = "block_test_latency";
 const REQUESTS: u16 = 100;
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(3);
 
+#[cfg_attr(not(feature = "performance"), ignore)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 #[allow(non_snake_case)]
-async fn p001_t1_GET_BLOCKS_latency() {
+async fn p001_GET_BLOCKS_latency() {
     // ZG-PERFORMANCE-001, Block getting latency
     //
     // This test checks if node behaves as expected under load from other peers.
