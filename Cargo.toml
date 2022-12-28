@@ -3,6 +3,9 @@ name = "ziggurat-algorand"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+performance = []
+
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"

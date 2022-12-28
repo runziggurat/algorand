@@ -133,9 +133,12 @@ const ROUND_KEY: Round = 1;
 // *NOTE* run with `cargo test --release  tests::performance::prio -- --nocapture --test-threads=1`
 // Before running test generate dummy devices with different ips using toos/ips.py
 
+#[cfg_attr(not(feature = "performance"), ignore)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 #[allow(non_snake_case)]
 async fn p002_t1_TRAFFIC_HIGH_LOW_latency() {
+    // ZG-PERFORMANCE-002
+
     let tags = HashSet::from([
         Tag::ProposalPayload,
         Tag::AgreementVote,
@@ -160,9 +163,12 @@ async fn p002_t1_TRAFFIC_HIGH_LOW_latency() {
     run_traffic_test(high_prio_factory, low_prio_factory).await;
 }
 
+#[cfg_attr(not(feature = "performance"), ignore)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 #[allow(non_snake_case)]
 async fn p002_t2_TRAFFIC_SAME_PRIO_latency() {
+    // ZG-PERFORMANCE-002
+
     let high_traffic_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
         data_type: UniEnsBlockReqType::Cert,
         round_key: 3,

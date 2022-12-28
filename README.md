@@ -10,32 +10,56 @@ Ziggurat is written in stable Rust; you can install the Rust toolchain by follow
 
 ## Getting started
 
+### Preconditions
+
 1. Clone this repository.
 2. Build [go-algorand](https://github.com/algorand/go-algorand) from source.
 3. Run the setup script:
 ```zsh
-    tools/setup_env.sh
+ tools/setup_env.sh
 ```
-
 In case algorand files are installed in a specific location, export that location to the `ALGORAND_BIN_PATH`
 environment variable and rerun the setup script:
 ```zsh
-    export ALGORAND_BIN_PATH="$HOME/node"   # example path
-    tools/setup_env.sh
+ export ALGORAND_BIN_PATH="$HOME/node"   # example path
+ tools/setup_env.sh
 ```
-4. Create a package of IP addresses (4k addresses) which are required for performance tests. From the root repository directory run, e.g.:
-   Under Linux (to generate dummy devices with addresses):
-   ```
-   sudo python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev_prefix test_zeth
-   ```
-   Under MacOS or Linux (to add whole subnet to loopback device - under Linux: lo, MacOS: lo0):
-   ```
-   sudo python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev lo0
-   ```
-   Read ./tools/ips.py for more details.
-5. Run tests with the following command:
+
+### Run tests
+Run conformance and resistance tests with the following command:
+
 ```zsh
-    cargo +stable t -- --test-threads=1
+ cargo +stable test
+```
+
+### Run performance tests
+Create a package of IP addresses (4k addresses) which are required for performance tests.
+
+_NOTE: To run the `ips.py` script below, the user must be in sudoers file in order to use this script.
+Script uses `ip`/`ipconfig` commands which require the sudo privilages._
+
+From the root repository directory, depending on your OS, run one of the following commands.
+
+#### Preconditions under Linux
+Generate dummy devices with addresses:
+```zsh
+ python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev_prefix test_zeth
+```
+
+#### Preconditions under MacOS
+Add the whole subnet to the loopback device - can be also used on Linux (device name - Linux: `lo`, MacOS: `lo0`):
+```zsh
+ python3 ./tools/ips.py --subnet 1.1.0.0/20 --file src/tools/ips.rs --dev lo0
+```
+Increase the limit for the number of file descriptors:
+```zsh
+ ulimit -n 65536
+```
+
+#### Run tests
+Run performance tests with the following command:
+```zsh
+ cargo +stable test performance --features performance
 ```
 
 ## Test Status

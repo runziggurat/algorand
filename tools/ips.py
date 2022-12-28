@@ -4,23 +4,23 @@
 # writes that list to the Rust file.
 # When testing is done, just change --op to 'remove' and run the script again to remove all the dummy devices (or aliases).
 #
-# Linux and Mac supported! Script need to be run with sudo.
+# Linux and Mac supported! User must be in sudoers file to use this script.
 #
 # User can tweak settings using command line.
 # Just run python ips.py --help for more information about parameters.
 # Either --dev_prefix or --dev should be specified.
 # Sample invocation:
 # add whole 9.1.1.0/24 subnet creating dummy devices test_zeth0...test_zeth248 and resulting IPs to file: src/tools/ips.rs
-# sudo python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth
+# python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth
 #
 # remove all test_zeth* devices from 24 subnet (clear src/tools/ips.rs file)
-# sudo python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth --op remove
+# python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev_prefix test_zeth --op remove
 #
 # add whole 9.1.1.0/24 subnet to device lo (for Mac use lo0) and resulting IPs to file: src/tools/ips.rs
-# sudo python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev lo
+# python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev lo
 #
 # remove whole 9.1.1.0/24 subnet from device lo (clear src/tools/ips.rs file)
-# sudo python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev lo --op remove
+# python3 ./tools/ips.py --subnet 9.1.1.0/24 --file src/tools/ips.rs --dev lo --op remove
 
 import argparse
 import ipaddress
@@ -36,31 +36,36 @@ def generate_hwaddr():
 
 
 def generate_dev(device_name, ip_addr):
-    cmd = 'ip link add ' + device_name + ' type dummy && '
+    cmd = 'sudo ip link add ' + device_name + ' type dummy && '
     cmd += 'ifconfig ' + device_name + ' hw ether ' + generate_hwaddr() + ' && '
     cmd += 'ip addr add ' + ip_addr + ' dev ' + device_name + ' && '
     cmd += 'ip link set ' + device_name + ' up'
+    print(cmd)
     return os.system(cmd)
 
 
 def remove_dev(device_name, ip_addr):
-    return os.system('ip link delete ' + device_name)
+    cmd = 'sudo ip link delete ' + device_name
+    print(cmd)
+    return os.system(cmd)
 
 
 def add_addr_to_existing_dev(device_name, ip_addr):
     if sys.platform.startswith('linux'):
-        cmd = 'ip addr add ' + ip_addr + ' dev ' + device_name + ' && '
+        cmd = 'sudo ip addr add ' + ip_addr + ' dev ' + device_name + ' && '
         cmd += 'ip link set ' + device_name + ' up'
     else:
-        cmd = 'ifconfig ' + device_name + ' alias ' + ip_addr + '/32'
+        cmd = 'sudo ifconfig ' + device_name + ' alias ' + ip_addr + '/32 &'
+    print(cmd)
     return os.system(cmd)
 
 
 def delete_addr_from_existing_dev(device_name, ip_addr):
     if sys.platform.startswith('linux'):
-        cmd = 'ip addr del ' + ip_addr + '/32 dev ' + device_name
+        cmd = 'sudo ip addr del ' + ip_addr + '/32 dev ' + device_name
     else:
-        cmd = 'ifconfig ' + device_name + ' -alias ' + ip_addr
+        cmd = 'sudo ifconfig ' + device_name + ' -alias ' + ip_addr
+    print(cmd)
     return os.system(cmd)
 
 
