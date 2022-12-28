@@ -154,12 +154,16 @@ async fn p002_t1_TRAFFIC_HIGH_LOW_latency() {
         Tag::UniEnsBlockReq,
         Tag::VoteBundle,
     ]);
-    let high_prio_factory = PayloadFactory::new(Payload::MsgOfInterest(MsgOfInterest { tags }));
-    let low_prio_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
-        data_type: UniEnsBlockReqType::BlockAndCert,
-        round_key: ROUND_KEY,
-        nonce: 123,
-    }));
+    let high_prio_factory =
+        PayloadFactory::new(Payload::MsgOfInterest(MsgOfInterest { tags }), None);
+    let low_prio_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
     run_traffic_test(high_prio_factory, low_prio_factory).await;
 }
 
@@ -169,16 +173,22 @@ async fn p002_t1_TRAFFIC_HIGH_LOW_latency() {
 async fn p002_t2_TRAFFIC_SAME_PRIO_latency() {
     // ZG-PERFORMANCE-002
 
-    let high_traffic_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
-        data_type: UniEnsBlockReqType::Cert,
-        round_key: 3,
-        nonce: 1,
-    }));
-    let normal_traffic_factory = PayloadFactory::new(Payload::UniEnsBlockReq(UniEnsBlockReq {
-        data_type: UniEnsBlockReqType::BlockAndCert,
-        round_key: ROUND_KEY,
-        nonce: 123,
-    }));
+    let high_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::Cert,
+            round_key: 3,
+            nonce: 1,
+        }),
+        None,
+    );
+    let normal_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
     run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
 }
 
