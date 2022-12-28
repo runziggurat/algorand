@@ -51,3 +51,30 @@ impl PayloadFactory {
         (0..count).map(|_| self.generate_next()).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::protocol::codecs::topic::{UniEnsBlockReq, UniEnsBlockReqType};
+
+    #[test]
+    #[ignore]
+    fn payload_factory_generation() {
+        let mut factory = PayloadFactory::new(
+            Payload::UniEnsBlockReq(UniEnsBlockReq {
+                data_type: UniEnsBlockReqType::BlockAndCert,
+                round_key: 1,
+                nonce: 123,
+            }),
+            None,
+        );
+
+        let payload1 = factory.generate_payloads(100);
+        assert_eq!(payload1.len(), 100);
+
+        let payload2 = factory.generate_next();
+        if let Payload::UniEnsBlockReq(message) = payload2 {
+            assert_eq!(message.nonce, 224);
+        }
+    }
+}
