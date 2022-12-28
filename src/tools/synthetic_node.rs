@@ -193,8 +193,14 @@ impl SyntheticNode {
     }
 
     /// Expects a message.
-    pub async fn expect_message(&mut self, check: &dyn Fn(&Payload) -> bool) -> bool {
-        timeout(EXPECT_MSG_TIMEOUT, async {
+    pub async fn expect_message(
+        &mut self,
+        check: &dyn Fn(&Payload) -> bool,
+        override_timeout: Option<Duration>,
+    ) -> bool {
+        let duration = override_timeout.unwrap_or(EXPECT_MSG_TIMEOUT);
+
+        timeout(duration, async {
             loop {
                 let (_, msg) = self.recv_message().await;
                 if check(&msg.payload) {

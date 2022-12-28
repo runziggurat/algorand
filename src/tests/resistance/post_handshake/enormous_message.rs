@@ -124,7 +124,7 @@ async fn r004_t1_PROPOPSAL_PAYLOAD_send_a_huge_valid_msg() {
 
     // Wait for at least one ProposalPayload message.
     let check_pp_msg = |m: &Payload| matches!(&m, Payload::ProposalPayload(_));
-    assert!(synthetic_node.expect_message(&check_pp_msg).await);
+    assert!(synthetic_node.expect_message(&check_pp_msg, None).await);
 
     // Send a massive ProposalPayload message recorded previously.
     let msg = Payload::RawBytes(pp_msg.raw);
@@ -139,7 +139,7 @@ async fn r004_t1_PROPOPSAL_PAYLOAD_send_a_huge_valid_msg() {
 
     // Check that we are still receiving ProposalPayload messages.
     assert!(
-        synthetic_node.expect_message(&check_pp_msg).await,
+        synthetic_node.expect_message(&check_pp_msg, None).await,
         "a proposal payload message is missing"
     );
 
@@ -184,7 +184,7 @@ async fn r004_t2_MSG_DIGEST_SKIP_send_a_huge_invalid_msg() {
     // Check that we are still receiving messages.
     assert!(
         !synthetic_node
-            .expect_message(&|m: &Payload| matches!(&m, _))
+            .expect_message(&|m: &Payload| matches!(&m, _), None)
             .await,
         "the connection is still established"
     );

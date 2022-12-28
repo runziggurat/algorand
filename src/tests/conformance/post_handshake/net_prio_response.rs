@@ -1,5 +1,6 @@
 use data_encoding::BASE64;
 use tempfile::TempDir;
+use tokio::time::Duration;
 
 use crate::{
     protocol::{
@@ -12,6 +13,8 @@ use crate::{
     setup::node::Node,
     tools::synthetic_node::SyntheticNodeBuilder,
 };
+
+const MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
 
 #[tokio::test]
 #[allow(non_snake_case)]
@@ -50,7 +53,7 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
         matches!(&m, Payload::NetPrioResponse(NetPrioResponse{response: Response { nonce }, ..})
                  if *nonce == challenge)
     };
-    assert!(synthetic_node.expect_message(&check).await);
+    assert!(synthetic_node.expect_message(&check, MSG_TIMEOUT).await);
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
@@ -85,7 +88,7 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
     node.start().await;
 
     let check = |m: &Payload| matches!(&m, Payload::NetPrioResponse(..));
-    assert!(!synthetic_node.expect_message(&check).await);
+    assert!(!synthetic_node.expect_message(&check, MSG_TIMEOUT).await);
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;

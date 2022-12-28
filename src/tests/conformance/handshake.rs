@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use tempfile::TempDir;
 use tokio::time::timeout;
 
@@ -89,6 +91,8 @@ async fn c002_handshake_when_node_initiates_connection() {
     node.stop().expect("unable to stop the node");
 }
 
+const NO_MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(5));
+
 #[tokio::test]
 async fn c003_t1_expect_no_messages_before_handshake() {
     // ZG-CONFORMANCE-003
@@ -119,7 +123,11 @@ async fn c003_t1_expect_no_messages_before_handshake() {
         .expect("unable to connect");
 
     let expect_any_msg = |_: &Payload| true;
-    assert!(!synthetic_node.expect_message(&expect_any_msg).await);
+    assert!(
+        !synthetic_node
+            .expect_message(&expect_any_msg, NO_MSG_TIMEOUT)
+            .await
+    );
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
@@ -156,7 +164,11 @@ async fn c003_t2_expect_no_messages_before_handshake() {
     node.start().await;
 
     let expect_any_msg = |_: &Payload| true;
-    assert!(!synthetic_node.expect_message(&expect_any_msg).await);
+    assert!(
+        !synthetic_node
+            .expect_message(&expect_any_msg, NO_MSG_TIMEOUT)
+            .await
+    );
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
