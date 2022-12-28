@@ -42,7 +42,7 @@ impl PayloadFactory {
     }
 
     /// Get vector of payloads reference from the cache.
-    pub fn get_pre_generated_payload_cache(&self) -> &Vec<Payload> {
+    pub fn get_pre_generated_payload_cache(&self) -> &[Payload] {
         &self.pre_generated_cache
     }
 
@@ -58,7 +58,7 @@ mod tests {
     use crate::protocol::codecs::topic::{UniEnsBlockReq, UniEnsBlockReqType};
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn payload_factory_generation() {
         let mut factory = PayloadFactory::new(
             Payload::UniEnsBlockReq(UniEnsBlockReq {
