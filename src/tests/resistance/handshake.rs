@@ -6,7 +6,12 @@ use crate::{
         handshake::{HandshakeCfg, SecWebSocket, X_AG_ACCEPT_VERSION, X_AG_ALGORAND_VERSION},
     },
     setup::node::{ChildExitCode, Node},
-    tools::synthetic_node::SyntheticNodeBuilder,
+    tools::{
+        constants::{
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW,
+        },
+        synthetic_node::SyntheticNodeBuilder,
+    },
 };
 
 // Empirical values based on some unofficial testing.
@@ -17,11 +22,11 @@ const WS_HTTP_HEADER_INVALID_SIZE: usize = WS_HTTP_HEADER_MAX_SIZE + 300;
 // Returns the truthful fact about the relationship with the node.
 async fn run_handshake_req_test_with_cfg(cfg: HandshakeCfg, debug: bool) -> bool {
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .log_to_stdout(debug)
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
@@ -29,9 +34,9 @@ async fn run_handshake_req_test_with_cfg(cfg: HandshakeCfg, debug: bool) -> bool
         .with_handshake_configuration(cfg)
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     let handshake_established = if synthetic_node.connect(net_addr).await.is_err() {
@@ -45,10 +50,7 @@ async fn run_handshake_req_test_with_cfg(cfg: HandshakeCfg, debug: bool) -> bool
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    assert_eq!(
-        node.stop().expect("unable to stop the node"),
-        ChildExitCode::Success
-    );
+    assert_eq!(node.stop().expect(ERR_NODE_STOP), ChildExitCode::Success);
 
     handshake_established
 }

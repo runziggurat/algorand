@@ -21,8 +21,8 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SOCKET_BIND,
-            ERR_SYNTH_BUILD, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
+            ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
         },
         ips::IPS,
         metrics::{
@@ -161,7 +161,7 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket, start_barrier: 
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let mut payload_factory = PayloadFactory::new(
         Payload::UniEnsBlockReq(UniEnsBlockReq {

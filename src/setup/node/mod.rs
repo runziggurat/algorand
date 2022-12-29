@@ -256,18 +256,19 @@ mod test {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::tools::constants::{ERR_NODE_BUILD, ERR_TEMPDIR_NEW};
 
     const SLEEP: Duration = Duration::from_millis(500);
 
     #[tokio::test]
     async fn start_stop_the_node() {
         let builder = Node::builder();
-        let target = TempDir::new().expect("couldn't create a temporary directory");
+        let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
 
         let mut node = builder
             .log_to_stdout(false)
             .build(target.path())
-            .expect("unable to build the node");
+            .expect(ERR_NODE_BUILD);
 
         // No addresses before the node is started.
         assert!(node.rest_client().is_none());
