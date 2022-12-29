@@ -6,7 +6,13 @@ use crate::{
         topic::{TopicMsgResp, UniCatchupReq, UniEnsBlockReq, UniEnsBlockReqType},
     },
     setup::node::Node,
-    tools::synthetic_node::SyntheticNodeBuilder,
+    tools::{
+        constants::{
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+            ERR_TEMPDIR_NEW,
+        },
+        synthetic_node::SyntheticNodeBuilder,
+    },
 };
 
 #[tokio::test]
@@ -15,25 +21,23 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
     // ZG-CONFORMANCE-004
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     let rest_client = node.rest_client().expect("couldn't get the rest client");
 
@@ -65,7 +69,7 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -74,25 +78,23 @@ async fn c010_t1_UNI_ENS_BLOCK_REQ_get_block_and_cert() {
     // ZG-CONFORMANCE-010
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -115,7 +117,7 @@ async fn c010_t1_UNI_ENS_BLOCK_REQ_get_block_and_cert() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -124,25 +126,23 @@ async fn c010_t2_UNI_ENS_BLOCK_REQ_get_block_only() {
     // ZG-CONFORMANCE-010
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -172,7 +172,7 @@ async fn c010_t2_UNI_ENS_BLOCK_REQ_get_block_only() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -181,25 +181,23 @@ async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
     // ZG-CONFORMANCE-010
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -229,7 +227,7 @@ async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -238,25 +236,23 @@ async fn c010_t4_UNI_ENS_BLOCK_REQ_cannot_get_non_existent_block() {
     // ZG-CONFORMANCE-010
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
         data_type: UniEnsBlockReqType::BlockAndCert,
@@ -276,7 +272,7 @@ async fn c010_t4_UNI_ENS_BLOCK_REQ_cannot_get_non_existent_block() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -288,25 +284,23 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
     // UniEnsBlockReq message. So, all subtests for this message are grouped together here.
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     let round = 1; // A random value from the 0..4 range.
 
@@ -390,5 +384,5 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }

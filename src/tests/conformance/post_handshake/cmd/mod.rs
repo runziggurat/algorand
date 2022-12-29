@@ -14,7 +14,10 @@ use crate::{
         kmd::Kmd,
         node::{rest_api::message::TransactionParams, Node},
     },
-    tools::synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
+    tools::{
+        constants::{ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT},
+        synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
+    },
 };
 
 pub async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
@@ -22,13 +25,13 @@ pub async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
     let synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_SYNTH_CONNECT);
 
     synthetic_node
 }

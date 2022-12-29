@@ -7,7 +7,7 @@ use crate::{
     tests::resistance::WAIT_FOR_DISCONNECT,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
             ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
@@ -37,7 +37,7 @@ async fn send_bytes_to_the_node(data: Vec<u8>, debug: bool) -> bool {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     // Send some random data.
     let random_data_msg = Payload::RawBytes(data);
