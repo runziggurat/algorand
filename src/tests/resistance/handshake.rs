@@ -54,7 +54,7 @@ async fn run_handshake_req_test_with_cfg(cfg: HandshakeCfg, debug: bool) -> bool
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "internal test"]
 async fn normal_handshake() {
     // Basically, a copy of the C001 test.
     assert!(

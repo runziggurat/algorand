@@ -125,13 +125,13 @@ mod tests {
     const HISTOGRAM_SIZE: usize = 50;
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_initialize_metrics() {
         let _ = TestMetrics::default();
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_get_counter_value() {
         let metrics = TestMetrics::default();
         let counter = register_counter!(METRIC_NAME);
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_get_gauge_value() {
         let metrics = TestMetrics::default();
         let gauge = register_gauge!(METRIC_NAME);
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_get_histogram_values() {
         let metrics = TestMetrics::default();
         let histogram = register_histogram!(METRIC_NAME);
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_construct_histogram() {
         let metrics = TestMetrics::default();
         let histogram = register_histogram!(METRIC_NAME);
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "internal test"]
     fn can_construct_multiple_histograms() {
         let metrics = TestMetrics::default();
         let histogram = register_histogram!(METRIC_NAME);
