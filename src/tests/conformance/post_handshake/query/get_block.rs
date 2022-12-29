@@ -8,7 +8,7 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
             ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
@@ -37,7 +37,7 @@ async fn c004_V1_BLOCK_ROUND_get_block() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let rest_client = node.rest_client().expect("couldn't get the rest client");
 
@@ -94,7 +94,7 @@ async fn c010_t1_UNI_ENS_BLOCK_REQ_get_block_and_cert() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -142,7 +142,7 @@ async fn c010_t2_UNI_ENS_BLOCK_REQ_get_block_only() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -197,7 +197,7 @@ async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     for round in 0..4 {
         let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
@@ -252,7 +252,7 @@ async fn c010_t4_UNI_ENS_BLOCK_REQ_cannot_get_non_existent_block() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
         data_type: UniEnsBlockReqType::BlockAndCert,
@@ -300,7 +300,7 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let round = 1; // A random value from the 0..4 range.
 

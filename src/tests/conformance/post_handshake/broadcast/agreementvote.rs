@@ -5,7 +5,7 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
             ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
@@ -34,7 +34,7 @@ async fn c008_AGREEMENT_VOTE_expect_after_connect() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let check = |m: &Payload| matches!(&m, Payload::AgreementVote(..));
 

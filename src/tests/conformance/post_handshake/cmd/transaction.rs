@@ -12,7 +12,9 @@ use crate::{
         get_handshaked_synth_node, get_pub_key_addr, get_signed_tagged_txn, get_txn_params,
         get_wallet_token,
     },
-    tools::constants::{ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW},
+    tools::constants::{
+        ERR_KMD_BUILD, ERR_KMD_STOP, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW,
+    },
 };
 
 #[tokio::test]
@@ -28,7 +30,7 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     let mut kmd = Kmd::builder()
         .build(target.path())
         .await
-        .expect("unable to build the kmd instance");
+        .expect(ERR_KMD_BUILD);
     kmd.start().await;
 
     let wallet_token = get_wallet_token(&mut kmd).await;
@@ -84,6 +86,6 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     // Gracefully shut down the nodes.
     synthetic_node_rx.shut_down().await;
     synthetic_node_tx.shut_down().await;
-    kmd.stop().expect("unable to stop the kmd instance");
+    kmd.stop().expect(ERR_KMD_STOP);
     node.stop().expect(ERR_NODE_STOP);
 }

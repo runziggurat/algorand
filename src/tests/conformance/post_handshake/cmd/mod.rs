@@ -15,7 +15,7 @@ use crate::{
         node::{rest_api::message::TransactionParams, Node},
     },
     tools::{
-        constants::{ERR_NODE_CONNECT, ERR_SYNTH_BUILD},
+        constants::{ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT},
         synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
     },
 };
@@ -31,7 +31,7 @@ pub async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     synthetic_node
 }

@@ -25,8 +25,8 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SOCKET_BIND,
-            ERR_SYNTH_BUILD, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
+            ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
         },
         ips::IPS,
         metrics::{
@@ -318,7 +318,7 @@ async fn simulate_normal_traffic_peer(
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let requests = normal_traffic_factory.generate_payloads(REQUESTS as usize);
 
@@ -373,7 +373,7 @@ async fn simulate_high_priority_peer(
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let requests = high_traffic_factory.generate_payloads(REQUESTS as usize);
 

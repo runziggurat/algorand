@@ -8,7 +8,7 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
             ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
@@ -40,7 +40,7 @@ async fn c005_t1_MSG_OF_INTEREST_expect_after_connect() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
     assert!(synthetic_node.expect_message(&check, MSG_TIMEOUT).await);
@@ -72,7 +72,7 @@ async fn c005_t2_MSG_OF_INTEREST_send_after_connect() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     // Send a MsgOfInterest message with all expected tags included.
     let tags = HashSet::from([
@@ -132,7 +132,7 @@ async fn c006_MSG_OF_INTEREST_expect_no_messages_after_sending_empty_tag_list() 
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
     assert!(synthetic_node.expect_message(&check, MSG_TIMEOUT).await);

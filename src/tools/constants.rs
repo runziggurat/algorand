@@ -38,5 +38,11 @@ pub const ERR_SYNTH_UNICAST: &str = "unable to send a message";
 /// Error message when synthetic node creation fails.
 pub const ERR_SYNTH_BUILD: &str = "unable to build a synthetic node";
 
+/// Error message for a failed connection.
+pub const ERR_SYNTH_CONNECT: &str = "unable to connect to the node";
+
+/// Error message for a failed connection.
+pub const ERR_SYNTH_START_LISTENING: &str = "a synthetic node couldn't start listening";
+
 /// Error message when temporary directory creation fails.
 pub const ERR_TEMPDIR_NEW: &str = "couldn't create a temporary directory";

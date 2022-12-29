@@ -9,7 +9,7 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
             ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
@@ -38,7 +38,7 @@ async fn c009_t1_PING_PING_REPLY_send_req_expect_reply() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     // Send a Ping with rand_bytes data.
     let nonce: [u8; 8] = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -86,7 +86,7 @@ async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     // TODO: reminder: uncomment or delete eventually.
     //// Expect a Ping request.

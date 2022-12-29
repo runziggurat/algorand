@@ -8,8 +8,8 @@ use crate::{
     setup::node::Node,
     tools::{
         constants::{
-            CONNECTION_TIMEOUT, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP,
-            ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW,
+            CONNECTION_TIMEOUT, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_SYNTH_CONNECT, ERR_TEMPDIR_NEW,
         },
         synthetic_node::SyntheticNodeBuilder,
     },
@@ -36,7 +36,7 @@ async fn c001_handshake_when_node_receives_connection() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     // This is only set post-handshake (if enabled).
     assert!(
@@ -119,7 +119,7 @@ async fn c003_t1_expect_no_messages_before_handshake() {
     synthetic_node
         .connect(net_addr)
         .await
-        .expect(ERR_NODE_CONNECT);
+        .expect(ERR_SYNTH_CONNECT);
 
     let expect_any_msg = |_: &Payload| true;
     assert!(

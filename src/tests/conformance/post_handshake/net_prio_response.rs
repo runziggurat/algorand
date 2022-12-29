@@ -12,7 +12,10 @@ use crate::{
     },
     setup::node::Node,
     tools::{
-        constants::{ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW},
+        constants::{
+            ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_START_LISTENING,
+            ERR_TEMPDIR_NEW,
+        },
         synthetic_node::SyntheticNodeBuilder,
     },
 };
@@ -42,7 +45,7 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
     let listening_addr = synthetic_node
         .start_listening()
         .await
-        .expect("a synthetic node couldn't start listening");
+        .expect(ERR_SYNTH_START_LISTENING);
 
     // Spin up a node instance.
     let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
@@ -80,7 +83,7 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
     let listening_addr = synthetic_node
         .start_listening()
         .await
-        .expect("a synthetic node couldn't start listening");
+        .expect(ERR_SYNTH_START_LISTENING);
 
     // Spin up a node instance.
     let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
