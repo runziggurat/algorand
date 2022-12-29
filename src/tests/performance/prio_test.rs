@@ -15,7 +15,7 @@ use crate::{
     protocol::{
         codecs::{
             algomsg::AlgoMsg,
-            msgpack::Round,
+            msgpack::{HashDigest, Round},
             payload::Payload,
             tagmsg::Tag,
             topic::{MsgOfInterest, TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
@@ -192,6 +192,26 @@ async fn p002_t2_TRAFFIC_SAME_PRIO_latency() {
     run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
 }
 
+#[cfg_attr(not(feature = "performance"), ignore)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(non_snake_case)]
+async fn p002_t3_COMB_MSG_DIGEST_latency() {
+    // ZG-PERFORMANCE-002
+
+    let hash = vec![2u8; 32];
+    let high_traffic_factory =
+        PayloadFactory::new(Payload::MsgDigestSkip(HashDigest::from(&hash)), None);
+    let normal_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
+    run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
+}
+
 async fn run_traffic_test(
     high_traffic_factory: PayloadFactory,
     normal_traffic_factory: PayloadFactory,
@@ -300,12 +320,12 @@ async fn simulate_normal_traffic_peer(
         .await
         .expect(ERR_NODE_CONNECT);
 
+    let requests = normal_traffic_factory.generate_payloads(REQUESTS as usize);
+
     // Wait for all peers to connect
     start_barrier.wait().await;
 
-    for _ in 0..REQUESTS {
-        let message = normal_traffic_factory.generate_next();
-
+    for message in requests {
         // Query transaction via peer protocol.
         if !synth_node.is_connected(node_addr) {
             break;
@@ -355,12 +375,12 @@ async fn simulate_high_priority_peer(
         .await
         .expect(ERR_NODE_CONNECT);
 
+    let requests = high_traffic_factory.generate_payloads(REQUESTS as usize);
+
     // Wait for all peers to start
     start_barrier.wait().await;
 
-    for _ in 0..REQUESTS {
-        let message = high_traffic_factory.generate_next();
-
+    for message in requests {
         if !synth_node.is_connected(node_addr) {
             break;
         }
