@@ -261,6 +261,10 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
     - UniEnsBlockReq
     - MsgDigestSkip
 
+### Results
+
+[ZG-PERFORMANCE-001-TEST-1](src/tests/performance/results/p001_GET_BLOCKS_latency.txt)
+
 ## Resistance
 
 ### ZG-RESISTANCE-001
