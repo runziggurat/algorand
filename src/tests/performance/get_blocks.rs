@@ -1,21 +1,29 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
+    sync::Arc,
     time::{Duration, Instant},
 };
 
 use tempfile::TempDir;
-use tokio::{net::TcpSocket, task::JoinSet, time::timeout};
+use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
 
 use crate::{
-    protocol::codecs::{
-        algomsg::AlgoMsg,
-        msgpack::Round,
-        payload::Payload,
-        topic::{TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
+    protocol::{
+        codecs::{
+            algomsg::AlgoMsg,
+            msgpack::Round,
+            payload::Payload,
+            topic::{TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
+        },
+        payload_factory::PayloadFactory,
     },
     setup::node::Node,
     tools::{
+        constants::{
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SOCKET_BIND,
+            ERR_SYNTH_BUILD, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+        },
         ips::IPS,
         metrics::{
             recorder::TestMetrics,
@@ -73,13 +81,11 @@ async fn p001_GET_BLOCKS_latency() {
     let mut table = RequestsTable::default();
 
     for synth_count in synth_counts {
-        let target = TempDir::new().expect("couldn't create a temporary directory");
-        let mut node = Node::builder()
-            .build(target.path())
-            .expect("unable to build the node");
+        let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+        let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
         node.start().await;
 
-        let node_addr = node.net_addr().expect("network address not found");
+        let node_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
         let mut synth_sockets = Vec::with_capacity(synth_count);
         let mut ips = IPS.to_vec();
@@ -96,7 +102,7 @@ async fn p001_GET_BLOCKS_latency() {
             socket.set_reuseaddr(true).unwrap();
             socket.set_reuseport(true).unwrap();
 
-            socket.bind(ip).expect("unable to bind to socket");
+            socket.bind(ip).expect(ERR_SOCKET_BIND);
             synth_sockets.push(socket);
         }
 
@@ -108,8 +114,11 @@ async fn p001_GET_BLOCKS_latency() {
         let mut synth_handles = JoinSet::new();
         let test_start = tokio::time::Instant::now();
 
+        let barrier = Arc::new(Barrier::new(synth_count));
+
         for socket in synth_sockets {
-            synth_handles.spawn(simulate_peer(node_addr, socket));
+            let arc_barrier = barrier.clone();
+            synth_handles.spawn(simulate_peer(node_addr, socket, arc_barrier));
         }
 
         // wait for peers to complete
@@ -130,7 +139,7 @@ async fn p001_GET_BLOCKS_latency() {
             }
         }
 
-        node.stop().expect("unable to stop the node");
+        node.stop().expect(ERR_NODE_STOP);
     }
 
     // Display results table
@@ -139,25 +148,33 @@ async fn p001_GET_BLOCKS_latency() {
 
 const ROUND_KEY: Round = 1;
 #[allow(unused_must_use)] // just for result of the timeout
-async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
+async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket, start_barrier: Arc<Barrier>) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     // Establish peer connection
     synth_node
         .connect_from(node_addr, socket)
         .await
-        .expect("unable to connect to node");
+        .expect(ERR_NODE_CONNECT);
 
-    for i in 0..REQUESTS {
-        let message = Payload::UniEnsBlockReq(UniEnsBlockReq {
+    let mut payload_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
             data_type: UniEnsBlockReqType::BlockAndCert,
             round_key: ROUND_KEY,
-            nonce: i as u64,
-        });
+            nonce: 1,
+        }),
+        None,
+    );
 
+    let requests = payload_factory.generate_payloads(REQUESTS as usize);
+
+    // Wait for all peers to connect
+    start_barrier.wait().await;
+
+    for message in requests {
         // Query transaction via peer protocol.
         if !synth_node.is_connected(node_addr) {
             break;
@@ -165,7 +182,7 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
 
         synth_node
             .unicast(node_addr, message)
-            .expect("unable to send message");
+            .expect(ERR_SYNTH_UNICAST);
 
         let now = Instant::now();
 
