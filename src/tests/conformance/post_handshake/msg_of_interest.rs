@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io};
+use std::collections::HashSet;
 
 use tempfile::TempDir;
 use tokio::time::Duration;
@@ -8,6 +8,9 @@ use crate::{
     setup::node::Node,
     tools::synthetic_node::SyntheticNodeBuilder,
 };
+
+// All MsgOfInterest messages should be received immediately after the connetion is established.
+const MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
 
 #[tokio::test]
 #[allow(non_snake_case)]
@@ -36,7 +39,7 @@ async fn c005_t1_MSG_OF_INTEREST_expect_after_connect() {
         .expect("unable to connect");
 
     let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
-    assert!(synthetic_node.expect_message(&check).await);
+    assert!(synthetic_node.expect_message(&check, MSG_TIMEOUT).await);
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
@@ -98,7 +101,7 @@ async fn c005_t2_MSG_OF_INTEREST_send_after_connect() {
 
     // Wait for any message from the 'tags' list above.
     let expect_any_msg = |_: &Payload| true;
-    assert!(synthetic_node.expect_message(&expect_any_msg).await);
+    assert!(synthetic_node.expect_message(&expect_any_msg, None).await);
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
@@ -132,7 +135,7 @@ async fn c006_MSG_OF_INTEREST_expect_no_messages_after_sending_empty_tag_list() 
         .expect("unable to connect");
 
     let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
-    assert!(synthetic_node.expect_message(&check).await);
+    assert!(synthetic_node.expect_message(&check, MSG_TIMEOUT).await);
 
     // Send a MsgOfInterest message with no tags enabled.
     let no_tags = HashSet::new();
@@ -148,13 +151,13 @@ async fn c006_MSG_OF_INTEREST_expect_no_messages_after_sending_empty_tag_list() 
     {}
 
     // Verify the node won't send us any messages afterwards.
-    match synthetic_node
-        .recv_message_timeout(Duration::from_secs(5)) // Usually, it broadcasts messages every few seconds.
-        .await
-    {
-        Err(e) if e.kind() == io::ErrorKind::TimedOut => (),
-        _ => panic!("no messages expected after enabling filter on all messages"),
-    }
+    let expect_any_msg = |_: &Payload| true;
+    let duration = Some(Duration::from_secs(5)); // Usually, it broadcasts messages every few seconds.
+    assert!(
+        !synthetic_node
+            .expect_message(&expect_any_msg, duration)
+            .await
+    );
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;

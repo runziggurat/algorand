@@ -44,8 +44,9 @@ async fn c009_t1_PING_PING_REPLY_send_req_expect_reply() {
     // Expect a PingReply response with the same data.
     let check =
         |m: &Payload| matches!(&m, Payload::PingReply(PingData{nonce: data}) if *data == nonce);
+    let duration = Some(Duration::from_secs(3));
     assert!(
-        synthetic_node.expect_message(&check).await,
+        synthetic_node.expect_message(&check, duration).await,
         "the PingReply response is missing"
     );
 
@@ -94,7 +95,7 @@ async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
     // Alternative approach at the moment: wait for any non-broadcast message:
     // Filter out the MsgOfInterest message.
     let check = |m: &Payload| matches!(&m, Payload::MsgOfInterest(..));
-    assert!(synthetic_node.expect_message(&check).await);
+    assert!(synthetic_node.expect_message(&check, None).await);
     // Wait for at least 10 minutes.
     assert!(timeout(Duration::from_secs(610), async {
         loop {

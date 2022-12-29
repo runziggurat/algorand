@@ -35,7 +35,7 @@ async fn c008_AGREEMENT_VOTE_expect_after_connect() {
 
     // Wait for two messages at least.
     for _ in 0..2 {
-        assert!(synthetic_node.expect_message(&check).await);
+        assert!(synthetic_node.expect_message(&check, None).await);
     }
 
     // Gracefully shut down the nodes.

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use tempfile::TempDir;
 
 use crate::{
@@ -74,7 +76,9 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
 
     let check = |m: &Payload| matches!(&m, Payload::Transaction(_));
     assert!(
-        synthetic_node_rx.expect_message(&check).await,
+        synthetic_node_rx
+            .expect_message(&check, Some(Duration::from_secs(3)))
+            .await,
         "a broadcasted transaction is missing"
     );
 

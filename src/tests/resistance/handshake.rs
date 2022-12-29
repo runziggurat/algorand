@@ -39,7 +39,7 @@ async fn run_handshake_req_test_with_cfg(cfg: HandshakeCfg, debug: bool) -> bool
     } else {
         // Wait for any message.
         synthetic_node
-            .expect_message(&|m: &Payload| matches!(&m, _))
+            .expect_message(&|m: &Payload| matches!(&m, _), None)
             .await
     };
 

@@ -108,7 +108,7 @@ async fn c010_t1_UNI_ENS_BLOCK_REQ_get_block_and_cert() {
                      if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round && rsp.cert.is_some())
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -165,7 +165,7 @@ async fn c010_t2_UNI_ENS_BLOCK_REQ_get_block_only() {
                      if rsp.error.as_str() == "requested data type is unsupported")
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -222,7 +222,7 @@ async fn c010_t3_UNI_ENS_BLOCK_REQ_get_cert_only() {
                      if rsp.error.as_str() == "requested data type is unsupported")
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -270,7 +270,7 @@ async fn c010_t4_UNI_ENS_BLOCK_REQ_cannot_get_non_existent_block() {
                  if rsp.error.as_str() == "requested block is not available")
     };
     assert!(
-        synthetic_node.expect_message(&check).await,
+        synthetic_node.expect_message(&check, None).await,
         "the UniEnsBlockRsp response is missing"
     );
 
@@ -324,7 +324,7 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
                      if rsp.block.is_some() && rsp.block.as_ref().unwrap().round == round && rsp.cert.is_some())
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -344,7 +344,7 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
                      if rsp.error.as_str() == "requested data type is unsupported")
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -364,7 +364,7 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
                      if rsp.error.as_str() == "requested data type is unsupported")
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
@@ -383,7 +383,7 @@ async fn c010_t5_UNI_CATCHUP_REQ_get_block_all_variations() {
                      if rsp.error.as_str() == "requested block is not available")
         };
         assert!(
-            synthetic_node.expect_message(&check).await,
+            synthetic_node.expect_message(&check, None).await,
             "the UniEnsBlockRsp response is missing"
         );
     }
