@@ -133,8 +133,9 @@ async fn c003_t1_expect_no_messages_before_handshake() {
     node.stop().expect(ERR_NODE_STOP);
 }
 
-// TODO(Rqnsom): Maybe this test makes no sense because we do get bombarded with the GET_BLOCK requests,
+// NOTE: Maybe this test makes no sense because we do get bombarded with the GET_BLOCK requests,
 // but our Reading thread still doesn't know how to parse those so we get a pea2pea invalid data error.
+// Conclusion: We'll keep the test - to be used for future testing.
 #[tokio::test]
 async fn c003_t2_expect_no_messages_before_handshake() {
     // ZG-CONFORMANCE-003

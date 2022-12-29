@@ -38,7 +38,10 @@ const METRIC_LATENCY: &str = "block_test_latency";
 const REQUESTS: u16 = 100;
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(3);
 
-#[cfg_attr(not(feature = "performance"), ignore)]
+#[cfg_attr(
+    not(feature = "performance"),
+    ignore = "run this test with the 'performance' feature enabled"
+)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 #[allow(non_snake_case)]
 async fn p001_GET_BLOCKS_latency() {

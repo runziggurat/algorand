@@ -61,7 +61,7 @@ async fn c009_t1_PING_PING_REPLY_send_req_expect_reply() {
 
 #[tokio::test]
 #[allow(non_snake_case)]
-#[ignore]
+#[ignore = "a very long test"]
 async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
     // ZG-CONFORMANCE-009
 
