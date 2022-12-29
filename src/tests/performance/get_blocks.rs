@@ -1,11 +1,12 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
+    sync::Arc,
     time::{Duration, Instant},
 };
 
 use tempfile::TempDir;
-use tokio::{net::TcpSocket, task::JoinSet, time::timeout};
+use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
 
 use crate::{
     protocol::{
@@ -113,8 +114,11 @@ async fn p001_GET_BLOCKS_latency() {
         let mut synth_handles = JoinSet::new();
         let test_start = tokio::time::Instant::now();
 
+        let barrier = Arc::new(Barrier::new(synth_count));
+
         for socket in synth_sockets {
-            synth_handles.spawn(simulate_peer(node_addr, socket));
+            let arc_barrier = barrier.clone();
+            synth_handles.spawn(simulate_peer(node_addr, socket, arc_barrier));
         }
 
         // wait for peers to complete
@@ -144,7 +148,7 @@ async fn p001_GET_BLOCKS_latency() {
 
 const ROUND_KEY: Round = 1;
 #[allow(unused_must_use)] // just for result of the timeout
-async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
+async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket, start_barrier: Arc<Barrier>) {
     let mut synth_node = SyntheticNodeBuilder::default()
         .build()
         .await
@@ -166,6 +170,9 @@ async fn simulate_peer(node_addr: SocketAddr, socket: TcpSocket) {
     );
 
     let requests = payload_factory.generate_payloads(REQUESTS as usize);
+
+    // Wait for all peers to connect
+    start_barrier.wait().await;
 
     for message in requests {
         // Query transaction via peer protocol.

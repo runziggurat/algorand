@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::protocol::codecs::payload::Payload;
 
 /// A factory for creating payloads.
@@ -17,6 +19,9 @@ impl PayloadFactory {
             }
             Payload::UniCatchupReq(message) => {
                 message.nonce += 1;
+            }
+            Payload::MsgDigestSkip(message) => {
+                message.0 = rand::thread_rng().gen::<[u8; 32]>();
             }
             _ => {}
         };

@@ -256,7 +256,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
         -> MsgOfInterest
 
     Results should be introspected manually to check the normal peer responsiveness (latency, throughput) when performing its operations.
-    Test cases cover high traffic with messages:
+    There are multiple test scenarios with different high-traffic messages:
     - MsgOfInterest
     - UniEnsBlockReq
     - MsgDigestSkip
