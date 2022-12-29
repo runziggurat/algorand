@@ -175,7 +175,7 @@ async fn p002_t2_TRAFFIC_SAME_PRIO_latency() {
 
     let high_traffic_factory = PayloadFactory::new(
         Payload::UniEnsBlockReq(UniEnsBlockReq {
-            data_type: UniEnsBlockReqType::Cert,
+            data_type: UniEnsBlockReqType::BlockAndCert,
             round_key: 3,
             nonce: 1,
         }),
