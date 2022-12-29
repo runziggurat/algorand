@@ -11,7 +11,10 @@ use crate::{
         handshake::HandshakeCfg,
     },
     setup::node::Node,
-    tools::synthetic_node::SyntheticNodeBuilder,
+    tools::{
+        constants::{ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW},
+        synthetic_node::SyntheticNodeBuilder,
+    },
 };
 
 const MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
@@ -34,7 +37,7 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
         .with_handshake_configuration(cfg)
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     let listening_addr = synthetic_node
         .start_listening()
@@ -42,11 +45,11 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
         .expect("a synthetic node couldn't start listening");
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .initial_peers([listening_addr])
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     let check = |m: &Payload| {
@@ -57,7 +60,7 @@ async fn c011_t1_NET_PRIO_RESPONSE_expect_rsp_from_the_node() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -72,7 +75,7 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     let listening_addr = synthetic_node
         .start_listening()
@@ -80,11 +83,11 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
         .expect("a synthetic node couldn't start listening");
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .initial_peers([listening_addr])
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     let check = |m: &Payload| matches!(&m, Payload::NetPrioResponse(..));
@@ -92,5 +95,5 @@ async fn c011_t2_NET_PRIO_RESPONSE_no_rsp_if_challenge_not_sent() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }

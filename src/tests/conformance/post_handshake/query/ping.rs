@@ -7,7 +7,13 @@ use crate::{
         payload::{Payload, PingData},
     },
     setup::node::Node,
-    tools::synthetic_node::SyntheticNodeBuilder,
+    tools::{
+        constants::{
+            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP, ERR_SYNTH_BUILD,
+            ERR_TEMPDIR_NEW,
+        },
+        synthetic_node::SyntheticNodeBuilder,
+    },
 };
 
 #[tokio::test]
@@ -16,25 +22,23 @@ async fn c009_t1_PING_PING_REPLY_send_req_expect_reply() {
     // ZG-CONFORMANCE-009
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_NODE_CONNECT);
 
     // Send a Ping with rand_bytes data.
     let nonce: [u8; 8] = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -52,7 +56,7 @@ async fn c009_t1_PING_PING_REPLY_send_req_expect_reply() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -63,26 +67,26 @@ async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
 
     crate::tools::synthetic_node::enable_tracing();
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .log_to_stdout(true)
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let mut synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_NODE_CONNECT);
 
     // TODO: reminder: uncomment or delete eventually.
     //// Expect a Ping request.
@@ -116,5 +120,5 @@ async fn c009_t2_PING_PING_REPLY_wait_for_a_ping_req() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }

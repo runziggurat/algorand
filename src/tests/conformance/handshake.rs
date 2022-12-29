@@ -6,7 +6,13 @@ use tokio::time::timeout;
 use crate::{
     protocol::codecs::payload::Payload,
     setup::node::Node,
-    tools::{constants::CONNECTION_TIMEOUT, synthetic_node::SyntheticNodeBuilder},
+    tools::{
+        constants::{
+            CONNECTION_TIMEOUT, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_CONNECT, ERR_NODE_STOP,
+            ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW,
+        },
+        synthetic_node::SyntheticNodeBuilder,
+    },
 };
 
 #[tokio::test]
@@ -14,25 +20,23 @@ async fn c001_handshake_when_node_receives_connection() {
     // ZG-CONFORMANCE-001
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
     let synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_NODE_CONNECT);
 
     // This is only set post-handshake (if enabled).
     assert!(
@@ -42,7 +46,7 @@ async fn c001_handshake_when_node_receives_connection() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 #[tokio::test]
@@ -53,7 +57,7 @@ async fn c002_handshake_when_node_initiates_connection() {
     let synthetic_node = SyntheticNodeBuilder::default()
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     let listening_addr = synthetic_node
         .start_listening()
@@ -61,11 +65,11 @@ async fn c002_handshake_when_node_initiates_connection() {
         .expect("a synthetic node couldn't start listening");
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .initial_peers([listening_addr])
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     let node_addr = timeout(CONNECTION_TIMEOUT, synthetic_node.wait_for_connection())
@@ -74,10 +78,7 @@ async fn c002_handshake_when_node_initiates_connection() {
 
     // Check the connection has been established (this is only set post-handshake). We can't check
     // for the addr as nodes use ephemeral addresses when initiating connections.
-    assert_ne!(
-        node_addr,
-        node.net_addr().expect("network address not found")
-    );
+    assert_ne!(node_addr, node.net_addr().expect(ERR_NODE_ADDR));
 
     // The node sends multiple get_block HTTP queries from different TCP sockets in parallel,
     // so on rare occasions we might have additional few short-lasting connections.
@@ -88,7 +89,7 @@ async fn c002_handshake_when_node_initiates_connection() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 const NO_MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(5));
@@ -101,10 +102,8 @@ async fn c003_t1_expect_no_messages_before_handshake() {
     // after it initiates a connection with the node.
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     // Create a synthetic node and enable handshaking.
@@ -112,15 +111,15 @@ async fn c003_t1_expect_no_messages_before_handshake() {
         .with_handshake(false)
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Connect to the node and initiate the handshake.
     synthetic_node
         .connect(net_addr)
         .await
-        .expect("unable to connect");
+        .expect(ERR_NODE_CONNECT);
 
     let expect_any_msg = |_: &Payload| true;
     assert!(
@@ -131,7 +130,7 @@ async fn c003_t1_expect_no_messages_before_handshake() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
 
 // TODO(Rqnsom): Maybe this test makes no sense because we do get bombarded with the GET_BLOCK requests,
@@ -148,7 +147,7 @@ async fn c003_t2_expect_no_messages_before_handshake() {
         .with_handshake(false)
         .build()
         .await
-        .expect("unable to build a synthetic node");
+        .expect(ERR_SYNTH_BUILD);
 
     let listening_addr = synthetic_node
         .start_listening()
@@ -156,11 +155,11 @@ async fn c003_t2_expect_no_messages_before_handshake() {
         .expect("a synthetic node couldn't start listening");
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
     let mut node = Node::builder()
         .initial_peers([listening_addr])
         .build(target.path())
-        .expect("unable to build the node");
+        .expect(ERR_NODE_BUILD);
     node.start().await;
 
     let expect_any_msg = |_: &Payload| true;
@@ -172,5 +171,5 @@ async fn c003_t2_expect_no_messages_before_handshake() {
 
     // Gracefully shut down the nodes.
     synthetic_node.shut_down().await;
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }

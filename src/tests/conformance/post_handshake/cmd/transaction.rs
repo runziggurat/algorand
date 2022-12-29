@@ -12,6 +12,7 @@ use crate::{
         get_handshaked_synth_node, get_pub_key_addr, get_signed_tagged_txn, get_txn_params,
         get_wallet_token,
     },
+    tools::constants::{ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW},
 };
 
 #[tokio::test]
@@ -20,10 +21,8 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     // ZG-CONFORMANCE-012
 
     // Spin up a node instance.
-    let target = TempDir::new().expect("couldn't create a temporary directory");
-    let mut node = Node::builder()
-        .build(target.path())
-        .expect("unable to build the node");
+    let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
+    let mut node = Node::builder().build(target.path()).expect(ERR_NODE_BUILD);
     node.start().await;
 
     let mut kmd = Kmd::builder()
@@ -62,7 +61,7 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
 
     let signed_tagged_txn = get_signed_tagged_txn(&mut kmd, wallet_token, &txn).await;
 
-    let net_addr = node.net_addr().expect("network address not found");
+    let net_addr = node.net_addr().expect(ERR_NODE_ADDR);
 
     // Create synthetic nodes.
     let synthetic_node_tx = get_handshaked_synth_node(net_addr).await;
@@ -86,5 +85,5 @@ async fn c012_TXN_submit_txn_and_expect_to_receive_it() {
     synthetic_node_rx.shut_down().await;
     synthetic_node_tx.shut_down().await;
     kmd.stop().expect("unable to stop the kmd instance");
-    node.stop().expect("unable to stop the node");
+    node.stop().expect(ERR_NODE_STOP);
 }
