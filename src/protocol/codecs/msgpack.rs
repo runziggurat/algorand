@@ -29,15 +29,15 @@ pub struct NetPrioResponse {
 
     /// Round represents a protocol round index.
     #[serde(rename = "Round")]
-    round: Round,
+    pub round: Round,
 
     /// Sender address.
     #[serde(rename = "Sender")]
-    sender_addr: Address,
+    pub sender_addr: Address,
 
     /// Signature.
     #[serde(rename = "Sig")]
-    sig: OneTimeSignature,
+    pub sig: OneTimeSignature,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -98,27 +98,27 @@ pub struct RawVote {
 pub struct OneTimeSignature {
     /// Sig is a signature of msg under the key PK.
     #[serde(rename = "s")]
-    sig: Ed25519Signature,
+    pub sig: Ed25519Signature,
     /// Public key.
     #[serde(rename = "p")]
-    pk: Ed25519PublicKey,
+    pub pk: Ed25519PublicKey,
 
     /// Old-style signature that does not use proper domain separation.
     /// PKSigOld is unused; however, unfortunately we forgot to mark it
     /// `codec:omitempty` and so it appears (with zero value) in certs.
     /// This means we can't delete the field without breaking catchup.
     #[serde(rename = "ps")]
-    pksigold: Ed25519Signature,
+    pub pksigold: Ed25519Signature,
 
     /// Used to verify a new-style two-level ephemeral signature.
     #[serde(rename = "p2")]
-    pk2: Ed25519PublicKey,
+    pub pk2: Ed25519PublicKey,
     /// PK1Sig is a signature of OneTimeSignatureSubkeyOffsetID(PK, Batch, Offset) under the key PK2.
     #[serde(rename = "p1s")]
-    pk1sig: Ed25519Signature,
+    pub pk1sig: Ed25519Signature,
     /// PK2Sig is a signature of OneTimeSignatureSubkeyBatchID(PK2, Batch) under the master key (OneTimeSignatureVerifier).
     #[serde(rename = "p2s")]
-    pk2sig: Ed25519Signature,
+    pub pk2sig: Ed25519Signature,
 }
 
 /// An UnauthenticatedCredential is a Credential which has not yet been authenticated.

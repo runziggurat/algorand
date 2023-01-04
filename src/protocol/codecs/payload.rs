@@ -126,6 +126,8 @@ impl Encoder<Payload> for PayloadCodec {
             Payload::MsgDigestSkip(hash) => hash.0.to_vec(),
             Payload::Ping(ping) => ping.nonce.to_vec(),
             Payload::RawBytes(data) => data.to_vec(),
+            Payload::NetPrioResponse(npr) => rmp_serde::encode::to_vec(&npr)
+                .map_err(|_| invalid_data!("couldn't encode a NetPrioResponse message"))?,
             _ => unimplemented!(),
         };
 

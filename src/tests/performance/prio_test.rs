@@ -6,6 +6,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use data_encoding::BASE64;
 use histogram::Histogram;
 use tabled::{Table, Tabled};
 use tempfile::TempDir;
@@ -15,7 +16,10 @@ use crate::{
     protocol::{
         codecs::{
             algomsg::AlgoMsg,
-            msgpack::{HashDigest, Round},
+            msgpack::{
+                Address, Ed25519PublicKey, Ed25519Signature, HashDigest, NetPrioResponse,
+                OneTimeSignature, Response, Round,
+            },
             payload::Payload,
             tagmsg::Tag,
             topic::{MsgOfInterest, TopicMsgResp, UniEnsBlockReq, UniEnsBlockReqType},
@@ -210,6 +214,43 @@ async fn p002_t3_COMB_MSG_DIGEST_latency() {
     let hash = vec![2u8; 32];
     let high_traffic_factory =
         PayloadFactory::new(Payload::MsgDigestSkip(HashDigest::from(&hash)), None);
+    let normal_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
+    run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
+}
+
+#[cfg_attr(
+    not(feature = "performance"),
+    ignore = "run this test with the 'performance' feature enabled"
+)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(non_snake_case)]
+async fn p002_t4_NET_PRIO_latency() {
+    // ZG-PERFORMANCE-002
+    let nonce = BASE64.encode(&[0u8; 32]);
+
+    let high_traffic_factory = PayloadFactory::new(
+        Payload::NetPrioResponse(NetPrioResponse {
+            response: Response { nonce },
+            round: ROUND_KEY,
+            sender_addr: Address::new([1u8; 32]),
+            sig: OneTimeSignature {
+                pk: Ed25519PublicKey([2u8; 32]),
+                pk2: Ed25519PublicKey([3u8; 32]),
+                sig: Ed25519Signature([4u8; 64]),
+                pk1sig: Ed25519Signature([5u8; 64]),
+                pk2sig: Ed25519Signature([6u8; 64]),
+                pksigold: Ed25519Signature([7u8; 64]),
+            },
+        }),
+        None,
+    );
     let normal_traffic_factory = PayloadFactory::new(
         Payload::UniEnsBlockReq(UniEnsBlockReq {
             data_type: UniEnsBlockReqType::BlockAndCert,

@@ -1,3 +1,4 @@
+use data_encoding::BASE64;
 use rand::Rng;
 
 use crate::protocol::codecs::payload::Payload;
@@ -22,6 +23,9 @@ impl PayloadFactory {
             }
             Payload::MsgDigestSkip(message) => {
                 message.0 = rand::thread_rng().gen::<[u8; 32]>();
+            }
+            Payload::NetPrioResponse(message) => {
+                message.response.nonce = BASE64.encode(&rand::thread_rng().gen::<[u8; 32]>());
             }
             _ => {}
         };
