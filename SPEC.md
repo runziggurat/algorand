@@ -260,6 +260,7 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
     - MsgOfInterest
     - UniEnsBlockReq
     - MsgDigestSkip
+    - NetPrioResponse
 
 ## Resistance
 
