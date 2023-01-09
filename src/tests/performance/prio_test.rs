@@ -17,8 +17,9 @@ use crate::{
         codecs::{
             algomsg::AlgoMsg,
             msgpack::{
-                Address, Ed25519PublicKey, Ed25519Signature, HashDigest, NetPrioResponse,
-                OneTimeSignature, Response, Round,
+                Address, AgreementVote, Ed25519PublicKey, Ed25519Signature, HashDigest,
+                NetPrioResponse, OneTimeSignature, ProposalPayload, RawVote, Response, Round,
+                UnauthenticatedCredential,
             },
             payload::Payload,
             tagmsg::Tag,
@@ -249,6 +250,91 @@ async fn p002_t4_NET_PRIO_latency() {
                 pksigold: Ed25519Signature([7u8; 64]),
             },
         }),
+        None,
+    );
+    let normal_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
+    run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
+}
+
+#[cfg_attr(
+    not(feature = "performance"),
+    ignore = "run this test with the 'performance' feature enabled"
+)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(non_snake_case)]
+async fn p002_t5_PROP_PAYLOAD_latency() {
+    // ZG-PERFORMANCE-002
+
+    let high_traffic_factory = PayloadFactory::new(
+        Payload::ProposalPayload(Box::new(ProposalPayload {
+            round: ROUND_KEY,
+            earn: 300,
+            fee_sink: Address::new([1u8; 32]),
+            genensis_id: String::from("123"),
+            genesis_id_hash: HashDigest::from(&vec![1u8; 32]),
+            leftover_fraction: 0xFFFFFFFF,
+            original_period: 0xFFFFFFFF,
+            original_proposal: Address::new([255u8; 32]),
+            prevous_block_hash: None,
+            prior_vote: None,
+            protocol_current: String::from("123"),
+            rewards_pool: Address::new([255u8; 32]),
+            rewards_rate: 0xFFFFFFFF,
+            rewards_rate_recalc_round: 0xFFFFFFFF,
+            seed_proof: None,
+            sortition_seed: None,
+            timestamp: 0xFFFFFFFF,
+            tx_merke_root_hash: None,
+            tx_merke_root_hash256: None,
+        })),
+        None,
+    );
+    let normal_traffic_factory = PayloadFactory::new(
+        Payload::UniEnsBlockReq(UniEnsBlockReq {
+            data_type: UniEnsBlockReqType::BlockAndCert,
+            round_key: ROUND_KEY,
+            nonce: 123,
+        }),
+        None,
+    );
+    run_traffic_test(high_traffic_factory, normal_traffic_factory).await;
+}
+
+#[cfg_attr(
+    not(feature = "performance"),
+    ignore = "run this test with the 'performance' feature enabled"
+)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(non_snake_case)]
+async fn p002_t6_AGREEMENT_latency() {
+    // ZG-PERFORMANCE-002
+
+    let high_traffic_factory = PayloadFactory::new(
+        Payload::AgreementVote(Box::new(AgreementVote {
+            raw_vote: RawVote {
+                sender_addr: Address::new([1u8; 32]),
+                round: ROUND_KEY,
+                step: 1,
+                period: 1,
+                proposal: None,
+            },
+            sig: OneTimeSignature {
+                pk: Ed25519PublicKey([1u8; 32]),
+                pk2: Ed25519PublicKey([2u8; 32]),
+                sig: Ed25519Signature([3u8; 64]),
+                pk1sig: Ed25519Signature([4u8; 64]),
+                pk2sig: Ed25519Signature([5u8; 64]),
+                pksigold: Ed25519Signature([6u8; 64]),
+            },
+            unauthenticated_credential: UnauthenticatedCredential { vrf_proof: None },
+        })),
         None,
     );
     let normal_traffic_factory = PayloadFactory::new(
