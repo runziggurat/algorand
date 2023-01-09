@@ -67,23 +67,23 @@ pub struct ProposalValue {
 pub struct RawVote {
     /// Sender address.
     #[serde(rename = "snd")]
-    sender_addr: Address,
+    pub sender_addr: Address,
 
     /// Round represents a protocol round index.
     #[serde(rename = "rnd")]
-    round: Round,
+    pub round: Round,
 
     /// Time period.
     #[serde(default, rename = "per")]
-    period: Period,
+    pub period: Period,
 
     /// Step of the round.
     #[serde(default, rename = "step")]
-    step: Step,
+    pub step: Step,
 
     /// Proposal vote.
     #[serde(default, rename = "prop")]
-    proposal: Option<ProposalValue>,
+    pub proposal: Option<ProposalValue>,
 }
 
 /// A OneTimeSignature is a cryptographic signature that is produced a limited
@@ -128,7 +128,7 @@ pub struct UnauthenticatedCredential {
     /// Proofs are malleable, however, for a given message and public key,
     /// the VRF output that can be computed from a proof is unique.
     #[serde(rename = "pf", default)]
-    vrf_proof: Option<VrfProof>,
+    pub vrf_proof: Option<VrfProof>,
 }
 
 /// [UnauthenticatedVote] is a vote which has not been verified.
