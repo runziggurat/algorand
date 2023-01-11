@@ -28,6 +28,8 @@ import os
 import random
 import sys
 
+# The first sudo command will not be executed in the background, which will allow the user to enter the sudo credentials.
+run_in_bg = ''
 
 def generate_hwaddr():
     return "02:00:00:%02x:%02x:%02x" % (random.randint(0, 255),
@@ -51,12 +53,16 @@ def remove_dev(device_name, ip_addr):
 
 
 def add_addr_to_existing_dev(device_name, ip_addr):
+    global run_in_bg
+
     if sys.platform.startswith('linux'):
         cmd = 'sudo ip addr add ' + ip_addr + ' dev ' + device_name + ' && '
         cmd += 'ip link set ' + device_name + ' up'
     else:
-        cmd = 'sudo ifconfig ' + device_name + ' alias ' + ip_addr + '/32 &'
+        cmd = 'sudo ifconfig ' + device_name + ' alias ' + ip_addr + '/32 ' + run_in_bg
     print(cmd)
+
+    run_in_bg = '&'
     return os.system(cmd)
 
 
