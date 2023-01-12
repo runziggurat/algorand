@@ -2,17 +2,15 @@ use std::collections::HashSet;
 
 use tempfile::TempDir;
 use tokio::time::Duration;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+    ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::{payload::Payload, tagmsg::Tag, topic::MsgOfInterest},
     setup::node::Node,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
-            ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::synthetic_node::SyntheticNodeBuilder,
 };
 
 // All MsgOfInterest messages should be received immediately after the connetion is established.

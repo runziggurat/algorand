@@ -7,6 +7,15 @@ use std::{
 
 use tempfile::TempDir;
 use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
+use ziggurat_core_metrics::{
+    latency_tables::{LatencyRequestStats, LatencyRequestsTable},
+    recorder::TestMetrics,
+    tables::duration_as_ms,
+};
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
+    ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::{
@@ -19,18 +28,7 @@ use crate::{
         payload_factory::PayloadFactory,
     },
     setup::node::Node,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
-            ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
-        },
-        ips::IPS,
-        metrics::{
-            recorder::TestMetrics,
-            tables::{duration_as_ms, RequestStats, RequestsTable},
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::{ips::IPS, synthetic_node::SyntheticNodeBuilder},
 };
 
 const METRIC_LATENCY: &str = "block_test_latency";
@@ -59,7 +57,7 @@ async fn p001_GET_BLOCKS_latency() {
 
     let synth_counts = vec![1, 50, 100, 200, 300, 400, 500, 600, 700, 800];
 
-    let mut table = RequestsTable::default();
+    let mut table = LatencyRequestsTable::default();
 
     for synth_count in synth_counts {
         let target = TempDir::new().expect(ERR_TEMPDIR_NEW);
@@ -111,7 +109,7 @@ async fn p001_GET_BLOCKS_latency() {
         if let Some(latencies) = snapshot.construct_histogram(METRIC_LATENCY) {
             if latencies.entries() >= 1 {
                 // add stats to table display
-                table.add_row(RequestStats::new(
+                table.add_row(LatencyRequestStats::new(
                     synth_count as u16,
                     REQUESTS,
                     latencies,

@@ -1,4 +1,8 @@
 use tempfile::TempDir;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+    ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::{
@@ -6,13 +10,7 @@ use crate::{
         topic::{TopicMsgResp, UniCatchupReq, UniEnsBlockReq, UniEnsBlockReqType},
     },
     setup::node::Node,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
-            ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::synthetic_node::SyntheticNodeBuilder,
 };
 
 #[tokio::test]

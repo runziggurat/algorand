@@ -1,6 +1,9 @@
 use data_encoding::BASE64;
 use tempfile::TempDir;
 use tokio::time::Duration;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_START_LISTENING, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::{
@@ -11,13 +14,7 @@ use crate::{
         handshake::HandshakeCfg,
     },
     setup::node::Node,
-    tools::{
-        constants::{
-            ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_START_LISTENING,
-            ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::synthetic_node::SyntheticNodeBuilder,
 };
 
 const MSG_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));

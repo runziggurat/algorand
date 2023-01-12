@@ -1,5 +1,8 @@
 use tempfile::TempDir;
 use tokio::time::timeout;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::{algomsg::AlgoMsg, msgpack::HashDigest, payload::Payload},
@@ -8,9 +11,7 @@ use crate::{
         conformance::post_handshake::cmd::get_handshaked_synth_node,
         resistance::post_handshake::enormous_message::get_huge_proposal_payload,
     },
-    tools::constants::{
-        ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_TEMPDIR_NEW, EXPECT_MSG_TIMEOUT,
-    },
+    tools::constants::EXPECT_MSG_TIMEOUT,
 };
 
 #[tokio::test]

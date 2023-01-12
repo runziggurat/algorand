@@ -5,6 +5,8 @@ mod transaction;
 
 use std::net::SocketAddr;
 
+use ziggurat_core_utils::err_constants::{ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT};
+
 use crate::{
     protocol::codecs::{
         msgpack::{Address, Transaction},
@@ -14,10 +16,7 @@ use crate::{
         kmd::Kmd,
         node::{rest_api::message::TransactionParams, Node},
     },
-    tools::{
-        constants::{ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT},
-        synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
-    },
+    tools::synthetic_node::{SyntheticNode, SyntheticNodeBuilder},
 };
 
 pub async fn get_handshaked_synth_node(net_addr: SocketAddr) -> SyntheticNode {
