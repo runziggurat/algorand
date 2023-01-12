@@ -267,6 +267,12 @@ The fuzz tests aim to buttress the message conformance tests with extra verifica
 ### Results
 
 [ZG-PERFORMANCE-001-TEST-1](src/tests/performance/results/p001_GET_BLOCKS_latency.txt)
+[ZG-PERFORMANCE-002-TEST-1](src/tests/performance/results/p002_t1_TRAFFIC_HIGH_LOW_latency.txt)
+[ZG-PERFORMANCE-002-TEST-2](src/tests/performance/results/p002_t2_TRAFFIC_SAME_PRIO_latency.txt)
+[ZG-PERFORMANCE-002-TEST-3](src/tests/performance/results/p002_t3_COMB_MSG_DIGEST_latency.txt)
+[ZG-PERFORMANCE-002-TEST-4](src/tests/performance/results/p002_t4_NET_PRIO_latency.txt)
+[ZG-PERFORMANCE-002-TEST-5](src/tests/performance/results/p002_t5_PROP_PAYLOAD_latency.txt)
+[ZG-PERFORMANCE-002-TEST-6](src/tests/performance/results/p002_t6_AGREEMENT_latency.txt)
 
 ## Resistance
 
