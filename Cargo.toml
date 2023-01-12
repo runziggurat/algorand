@@ -14,7 +14,6 @@ bytes = "1"
 data-encoding = "2.3"
 fs_extra = "1.2"
 futures-util = { version = "0.3", features = ["sink"] }
-histogram = "0.6.9"
 home = "0.5.3"
 httparse = "1.8"
 metrics = "0.20.0"
@@ -27,13 +26,14 @@ reqwest = { version = "0.11", features = ["json"] }
 rmp-serde = "1.0.0"
 serde_bytes = "0.11"
 sha2 = "0.10"
-tabled = "0.10"
 tempfile = "3.3"
 tokio-tungstenite = "0.17"
 tokio-util = { version = "0.7", features = ["codec"] }
 toml = "0.5.9"
 tungstenite = "0.17"
 websocket-codec = "0.5"
+ziggurat-core-metrics = { git = "https://github.com/runziggurat/ziggurat-core", tag = "v0.1.0" }
+ziggurat-core-utils = { git = "https://github.com/runziggurat/ziggurat-core", tag = "v0.1.0" }
 
 [dependencies.serde]
 version = "1"

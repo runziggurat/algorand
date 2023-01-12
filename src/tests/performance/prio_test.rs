@@ -7,10 +7,17 @@ use std::{
 };
 
 use data_encoding::BASE64;
-use histogram::Histogram;
-use tabled::{Table, Tabled};
 use tempfile::TempDir;
 use tokio::{net::TcpSocket, sync::Barrier, task::JoinSet, time::timeout};
+use ziggurat_core_metrics::{
+    recorder::TestMetrics,
+    tables::duration_as_ms,
+    traffic_tables::{TrafficRequestStats, TrafficRequestsTable},
+};
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
+    ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::{
@@ -28,80 +35,8 @@ use crate::{
         payload_factory::PayloadFactory,
     },
     setup::node::Node,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SOCKET_BIND, ERR_SYNTH_BUILD,
-            ERR_SYNTH_CONNECT, ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
-        },
-        ips::IPS,
-        metrics::{
-            recorder::TestMetrics,
-            tables::{duration_as_ms, fmt_table, table_float_display},
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::{ips::IPS, synthetic_node::SyntheticNodeBuilder},
 };
-
-#[derive(Default)]
-pub struct RequestsTable {
-    rows: Vec<RequestStats>,
-}
-
-#[derive(Tabled, Default, Debug, Clone)]
-pub struct RequestStats {
-    #[tabled(rename = " normal peers ")]
-    normal_peers: u16,
-    #[tabled(rename = " high-traffic peers ")]
-    high_traffic_peers: u16,
-    #[tabled(rename = " requests ")]
-    requests: u16,
-    #[tabled(rename = " min (ms) ")]
-    latency_min: u16,
-    #[tabled(rename = " max (ms) ")]
-    latency_max: u16,
-    #[tabled(rename = " std dev (ms) ")]
-    latency_std_dev: u16,
-    #[tabled(rename = " completion % ")]
-    #[tabled(display_with = "table_float_display")]
-    completion: f64,
-    #[tabled(rename = " time (s) ")]
-    #[tabled(display_with = "table_float_display")]
-    time: f64,
-}
-
-impl RequestStats {
-    pub fn new(
-        normal_peers: u16,
-        high_traffic_peers: u16,
-        requests: u16,
-        latency: Histogram,
-        time: f64,
-    ) -> Self {
-        Self {
-            normal_peers,
-            high_traffic_peers,
-            requests,
-            completion: (latency.entries() as f64) / (normal_peers as f64 * requests as f64)
-                * 100.00,
-            latency_min: latency.minimum().unwrap() as u16,
-            latency_max: latency.maximum().unwrap() as u16,
-            latency_std_dev: latency.stddev().unwrap() as u16,
-            time,
-        }
-    }
-}
-
-impl RequestsTable {
-    pub fn add_row(&mut self, row: RequestStats) {
-        self.rows.push(row);
-    }
-}
-
-impl std::fmt::Display for RequestsTable {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&fmt_table(Table::new(&self.rows)))
-    }
-}
 
 const METRIC_LATENCY: &str = "traffic_test_latency";
 // number of requests to send per peer
@@ -355,7 +290,7 @@ async fn run_traffic_test(
     let h_traffic_peer_set = vec![1, 50, 100, 200, 300, 400, 799];
     let n_traffic_peers = 1;
 
-    let mut table = RequestsTable::default();
+    let mut table = TrafficRequestsTable::default();
 
     for h_traffic_peers in h_traffic_peer_set {
         let total_peers = n_traffic_peers + h_traffic_peers;
@@ -421,7 +356,7 @@ async fn run_traffic_test(
         if let Some(latencies) = snapshot.construct_histogram(METRIC_LATENCY) {
             if latencies.entries() >= 1 {
                 // add stats to table display
-                table.add_row(RequestStats::new(
+                table.add_row(TrafficRequestStats::new(
                     n_traffic_peers as u16, // only one normal peer
                     h_traffic_peers as u16,
                     REQUESTS,

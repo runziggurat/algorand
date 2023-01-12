@@ -1,5 +1,9 @@
 use tempfile::TempDir;
 use tokio::time::{sleep, timeout, Duration};
+use ziggurat_core_utils::err_constants::{
+    ERR_KMD_BUILD, ERR_KMD_STOP, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_UNICAST,
+    ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::{
@@ -13,10 +17,7 @@ use crate::{
         get_handshaked_synth_node, get_pub_key_addr, get_signed_tagged_txn, get_txn_params,
         get_wallet_token,
     },
-    tools::constants::{
-        ERR_KMD_BUILD, ERR_KMD_STOP, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP,
-        ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW, EXPECT_MSG_TIMEOUT,
-    },
+    tools::constants::EXPECT_MSG_TIMEOUT,
 };
 
 // Generates a valid proposal payload message which contains a massive amount of transactions.

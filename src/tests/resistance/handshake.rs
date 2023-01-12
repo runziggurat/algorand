@@ -1,4 +1,7 @@
 use tempfile::TempDir;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::{
@@ -6,12 +9,7 @@ use crate::{
         handshake::{HandshakeCfg, SecWebSocket, X_AG_ACCEPT_VERSION, X_AG_ALGORAND_VERSION},
     },
     setup::node::{ChildExitCode, Node},
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::synthetic_node::SyntheticNodeBuilder,
 };
 
 // Empirical values based on some unofficial testing.

@@ -1,18 +1,15 @@
 use tempfile::TempDir;
 use tokio::time::sleep;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+    ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::payload::Payload,
     setup::node::Node,
     tests::resistance::WAIT_FOR_DISCONNECT,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
-            ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-        util::gen_rand_bytes,
-    },
+    tools::{synthetic_node::SyntheticNodeBuilder, util::gen_rand_bytes},
 };
 
 /// Send some randomly generated data to the node before the handshake and check the connection status.

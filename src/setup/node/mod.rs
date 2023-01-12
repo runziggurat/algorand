@@ -254,9 +254,9 @@ impl Drop for Node {
 #[cfg(test)]
 mod test {
     use tempfile::TempDir;
+    use ziggurat_core_utils::err_constants::{ERR_NODE_BUILD, ERR_TEMPDIR_NEW};
 
     use super::*;
-    use crate::tools::constants::{ERR_NODE_BUILD, ERR_TEMPDIR_NEW};
 
     const SLEEP: Duration = Duration::from_millis(500);
 

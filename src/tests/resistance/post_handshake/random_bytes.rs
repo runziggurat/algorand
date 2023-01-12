@@ -1,18 +1,15 @@
 use tempfile::TempDir;
 use tokio::time::sleep;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+    ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::{payload::Payload, tagmsg::Tag},
     setup::node::Node,
     tests::resistance::WAIT_FOR_DISCONNECT,
-    tools::{
-        constants::{
-            ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
-            ERR_SYNTH_UNICAST, ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-        util::gen_rand_bytes,
-    },
+    tools::{synthetic_node::SyntheticNodeBuilder, util::gen_rand_bytes},
 };
 
 /// Send given bytes directly to the node after the handshake and return the connection status.

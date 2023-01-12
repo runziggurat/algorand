@@ -2,17 +2,15 @@ use std::time::Duration;
 
 use tempfile::TempDir;
 use tokio::time::timeout;
+use ziggurat_core_utils::err_constants::{
+    ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD, ERR_SYNTH_CONNECT,
+    ERR_TEMPDIR_NEW,
+};
 
 use crate::{
     protocol::codecs::payload::Payload,
     setup::node::Node,
-    tools::{
-        constants::{
-            CONNECTION_TIMEOUT, ERR_NODE_ADDR, ERR_NODE_BUILD, ERR_NODE_STOP, ERR_SYNTH_BUILD,
-            ERR_SYNTH_CONNECT, ERR_TEMPDIR_NEW,
-        },
-        synthetic_node::SyntheticNodeBuilder,
-    },
+    tools::{constants::CONNECTION_TIMEOUT, synthetic_node::SyntheticNodeBuilder},
 };
 
 #[tokio::test]
