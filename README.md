@@ -1,7 +1,5 @@
 # Ziggurat x Algorand
 
-*Note:* This project is a work in progress.
-
 The Ziggurat implementation for Algorand's `algod` nodes.
 
 ## Prerequisites
