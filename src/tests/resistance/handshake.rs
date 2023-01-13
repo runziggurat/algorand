@@ -92,8 +92,8 @@ async fn r002_t1_HANDSHAKE_instance_name() {
 
     // Send an empty field.
     // NOTE: hmm, should the node allow an empty name field?
-    //let cfg = gen_cfg(0);
-    //assert!(!run_handshake_req_test_with_cfg(cfg).await);
+    let cfg = gen_cfg(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
 }
 
 #[tokio::test]
@@ -147,8 +147,8 @@ async fn r002_t3_HANDSHAKE_genesis() {
 
     // Send an empty field.
     // NOTE: fails because the value seems unused.
-    //let cfg = gen_cfg(0);
-    //assert!(!run_handshake_req_test_with_cfg(cfg).await);
+    let cfg = gen_cfg(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
 }
 
 #[tokio::test]
@@ -175,8 +175,8 @@ async fn r002_t4_HANDSHAKE_user_agent() {
 
     // Send an empty field.
     // NOTE: fails because the value seems unused.
-    //let cfg = gen_cfg(0);
-    //assert!(!run_handshake_req_test_with_cfg(cfg).await);
+    let cfg = gen_cfg(0);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
 }
 
 #[tokio::test]
@@ -285,18 +285,18 @@ async fn r002_t8_HANDSHAKE_location() {
 
     // Below tests assert the connection shouldn't be established.
 
-    // NOTE: The node should reject an invalid address.
-    //// Find the largest instance value which the node can accept.
-    //let cfg = gen_cfg(WS_HTTP_HEADER_MAX_SIZE);
-    //assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
-
-    // NOTE: The node should reject an invalid address.
-    //// Send an empty field.
-    //let cfg = gen_cfg(0);
-    //assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
-
     // Use a huge value which the node will reject.
     let cfg = gen_cfg(WS_HTTP_HEADER_INVALID_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // NOTE: The node should reject an invalid address.
+    // Find the largest instance value which the node can accept.
+    let cfg = gen_cfg(WS_HTTP_HEADER_MAX_SIZE);
+    assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
+
+    // NOTE: The node should reject an invalid address.
+    // Send an empty field.
+    let cfg = gen_cfg(0);
     assert!(!run_handshake_req_test_with_cfg(cfg, false).await);
 }
 
