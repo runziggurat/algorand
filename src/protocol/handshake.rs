@@ -47,6 +47,8 @@ impl SecWebSocket {
 
 #[derive(Clone, Debug)]
 pub struct HandshakeCfg {
+    /// Genesis HTTP path for genesis ID to identify the chain.
+    pub gossip_genesis: String,
     /// WebSocket protocol version.
     pub ws_version: String,
     /// User agent is the HTTP header which identifies the user agent.
@@ -74,6 +76,7 @@ pub struct HandshakeCfg {
 impl Default for HandshakeCfg {
     fn default() -> Self {
         Self {
+            gossip_genesis: X_AG_ALGORAND_GENESIS.into(),
             ar_instance_name: X_AG_INSTANCE_NAME.into(),
             ws_version: SEC_WEBSOCKET_VERSION.into(),
             user_agent: USER_AGENT.into(),
@@ -114,7 +117,7 @@ impl Handshake for InnerNode {
                     req.extend_from_slice(header.as_bytes());
                 };
 
-                req_header(format!("GET /v1/{}/gossip HTTP/1.1", X_AG_ALGORAND_GENESIS));
+                req_header(format!("GET /v1/{}/gossip HTTP/1.1", cfg.gossip_genesis));
                 req_header(format!("Host: {}", conn_addr));
                 req_header(format!("User-Agent: {}", cfg.user_agent));
                 req_header("Connection: Upgrade".into());
