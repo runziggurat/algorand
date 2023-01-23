@@ -118,7 +118,7 @@ impl Handshake for InnerNode {
                 };
 
                 req_header(format!("GET /v1/{}/gossip HTTP/1.1", cfg.gossip_genesis));
-                req_header(format!("Host: {}", conn_addr));
+                req_header(format!("Host: {conn_addr}"));
                 req_header(format!("User-Agent: {}", cfg.user_agent));
                 req_header("Connection: Upgrade".into());
                 req_header(format!("Sec-WebSocket-Key: {}", sec_ws.key));
