@@ -82,7 +82,7 @@ impl Kmd {
     /// Creates a KmdBuilder.
     pub fn builder() -> KmdBuilder {
         KmdBuilder::new()
-            .map_err(|e| format!("unable to create a builder: {:?}", e))
+            .map_err(|e| format!("unable to create a builder: {e:?}"))
             .unwrap()
     }
 
@@ -142,7 +142,7 @@ impl Kmd {
 
         // Remove the address file since the address may change if the kmd is restarted.
         match fs::remove_file(self.conf.path.join(REST_ADDR_FILE)) {
-            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("unexpected error: {:?}", e),
+            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("unexpected error: {e:?}"),
             _ => (),
         };
         self.conf.rest_api_addr = None;
@@ -222,7 +222,7 @@ impl Drop for Kmd {
     fn drop(&mut self) {
         // We should avoid a panic.
         if let Err(e) = self.stop() {
-            eprintln!("Failed to stop the kmd instance: {}", e);
+            eprintln!("Failed to stop the kmd instance: {e}");
         }
     }
 }

@@ -371,7 +371,7 @@ impl Address {
     pub fn from_string(string: &str) -> Result<Address, String> {
         let checksum_address = match BASE32_NOPAD.decode(string.as_bytes()) {
             Ok(decoded) => decoded,
-            Err(err) => return Err(format!("error decoding base32: {:?}", err)),
+            Err(err) => return Err(format!("error decoding base32: {err:?}")),
         };
 
         if checksum_address.len() != (HASH_LEN + CHECKSUM_LEN) {
@@ -407,7 +407,7 @@ impl Display for Address {
 
 impl Debug for Address {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 

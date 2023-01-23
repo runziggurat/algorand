@@ -187,7 +187,7 @@ impl SyntheticNode {
             Ok(msg) => Ok(msg),
             Err(_) => Err(io::Error::new(
                 io::ErrorKind::TimedOut,
-                format!("could not read the message after: {:?}", duration),
+                format!("could not read the message after: {duration:?}"),
             )),
         }
     }

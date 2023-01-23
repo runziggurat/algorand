@@ -110,7 +110,7 @@ impl Node {
     /// Creates a NodeBuilder.
     pub fn builder() -> NodeBuilder {
         NodeBuilder::new()
-            .map_err(|e| format!("unable to create a builder: {:?}", e))
+            .map_err(|e| format!("unable to create a builder: {e:?}"))
             .unwrap()
     }
 
@@ -155,7 +155,7 @@ impl Node {
 
             let mut ip_list = String::new();
             for ip in self.conf.initial_peers.iter() {
-                ip_list.push_str(&format!("{};", ip));
+                ip_list.push_str(&format!("{ip};"));
             }
             ip_list.pop().unwrap(); // Remove a trailing ';'
 
@@ -198,7 +198,7 @@ impl Node {
 
         // Remove address files since addresses may change if the node is restarted.
         let remove_file = |file_name| match fs::remove_file(self.conf.path.join(file_name)) {
-            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("unexpected error: {:?}", e),
+            Err(e) if e.kind() != io::ErrorKind::NotFound => panic!("unexpected error: {e:?}"),
             _ => (),
         };
         remove_file(NET_ADDR_FILE);
@@ -246,7 +246,7 @@ impl Drop for Node {
     fn drop(&mut self) {
         // We should avoid a panic.
         if let Err(e) = self.stop() {
-            eprintln!("Failed to stop the node: {}", e);
+            eprintln!("Failed to stop the node: {e}");
         }
     }
 }
