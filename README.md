@@ -1,4 +1,5 @@
 # Ziggurat x Algorand
+[![dependency status](https://deps.rs/repo/github/runziggurat/algorand/status.svg)](https://deps.rs/repo/github/runziggurat/algorand)
 
 The Ziggurat implementation for Algorand's `algod` nodes.
 
