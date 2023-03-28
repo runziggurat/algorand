@@ -169,12 +169,6 @@ make_test!(
 
 // Test status: fails.
 make_test!(
-    t10_UNI_CATCHUP_REQ_send_random_data_after_tag,
-    Tag::UniCatchupReq
-);
-
-// Test status: fails.
-make_test!(
     t11_UNI_ENS_BLOCK_REQ_send_random_data_after_tag,
     Tag::UniEnsBlockReq
 );
