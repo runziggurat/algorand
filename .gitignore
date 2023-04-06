@@ -1,2 +1,4 @@
 /target
 /Cargo.lock
+/tools/ips_list.json
+/tools/ips.py
