@@ -1,4 +1,4 @@
-## Run performance tests
+## Run Performance Tests
 Create a package of IP addresses (4k addresses) which are required for performance tests.
 
 You must first fetch the `ips.py` script from the ziggurat-core repository.  Run this:

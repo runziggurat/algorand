@@ -33,7 +33,7 @@ Run conformance and resistance tests with the following command:
 
 ### Run performance tests
 
-Consult the [Performance Tests readme](PERF.md) for a detailed description of how to run these tests.
+Consult the [performance tests readme](PERF.md) for details on running these tests.
 
 
 ## Test Status
