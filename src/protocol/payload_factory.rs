@@ -18,9 +18,6 @@ impl PayloadFactory {
             Payload::UniEnsBlockReq(message) => {
                 message.nonce += 1;
             }
-            Payload::UniCatchupReq(message) => {
-                message.nonce += 1;
-            }
             Payload::MsgDigestSkip(message) => {
                 message.0 = rand::thread_rng().gen::<[u8; 32]>();
             }
